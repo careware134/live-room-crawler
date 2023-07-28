@@ -7,6 +7,7 @@ import (
 	"github.com/spyzhov/ajson"
 	"io"
 	"live-room-crawler/listener"
+	"live-room-crawler/local_server"
 	"live-room-crawler/util"
 	"net/http"
 	"net/url"
@@ -15,20 +16,14 @@ import (
 )
 
 var (
-	roomInfo RoomInfo
+	roomInfo local_server.RoomInfo
 	logger   *log.Entry = util.Logger()
 )
 
-type RoomInfo struct {
-	RoomId    string
-	RoomTitle string
-	ttwid     string
-}
-
-func WssServerStart(roomInfo *RoomInfo) {
+func StartDouyinConnection(roomInfo *local_server.RoomInfo, server local_server.LocalClientRegistry) {
 	websocketUrl := strings.ReplaceAll(util.WebSocketTemplateURL, util.RoomIdPlaceHolder, roomInfo.RoomId)
 	header := http.Header{
-		"cookie":     []string{"ttwid=" + roomInfo.ttwid},
+		"cookie":     []string{"ttwid=" + roomInfo.Ttwid},
 		"User-Agent": []string{util.SimulateUserAgent},
 	}
 
@@ -51,7 +46,7 @@ func WssServerStart(roomInfo *RoomInfo) {
 	}
 }
 
-func RetrieveRoomInfoFromHttpCall(liveUrl string) *RoomInfo {
+func RetrieveRoomInfoFromHttpCall(liveUrl string) *local_server.RoomInfo {
 	// request room liveUrl
 	req, err := http.NewRequest("GET", liveUrl, nil)
 	if err != nil {
@@ -131,10 +126,10 @@ func RetrieveRoomInfoFromHttpCall(liveUrl string) *RoomInfo {
 	}
 
 	log.Infof("🎥start to crawl for RoomId: %s title: %s ttwid: %s", liveRoomId, liveRoomTitle, ttwid)
-	roomInfo = RoomInfo{
+	roomInfo = local_server.RoomInfo{
 		RoomId:    liveRoomId,
 		RoomTitle: liveRoomTitle,
-		ttwid:     ttwid,
+		Ttwid:     ttwid,
 	}
 	return &roomInfo
 }

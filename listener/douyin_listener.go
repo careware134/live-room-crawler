@@ -41,81 +41,86 @@ func OnMessage(message []byte, conn *websocket.Conn) {
 	for _, msg := range payloadPackage.MessagesList {
 		switch msg.Method {
 		case "WebcastMatchAgainstScoreMessage":
-			unPackMatchAgainstScoreMessage(msg.Payload)
+			parseMatchAgainstScoreMessage(msg.Payload)
 		case "WebcastLikeMessage":
-			unPackWebcastLikeMessage(msg.Payload)
+			parseWebcastLikeMessage(msg.Payload)
 		case "WebcastMemberMessage":
-			unPackWebcastMemberMessage(msg.Payload)
+			parseWebcastMemberMessage(msg.Payload)
 		case "WebcastGiftMessage":
-			unPackWebcastGiftMessage(msg.Payload)
+			parseWebcastGiftMessage(msg.Payload)
 		case "WebcastChatMessage":
-			unPackWebcastChatMessage(msg.Payload)
+			parseWebcastChatMessage(msg.Payload)
 		case "WebcastSocialMessage":
-			unPackWebcastSocialMessage(msg.Payload)
+			parseWebcastSocialMessage(msg.Payload)
 		case "WebcastRoomUserSeqMessage":
-			unPackWebcastRoomUserSeqMessage(msg.Payload)
+			//seqMessage := parseWebcastRoomUserSeqMessage(msg.Payload)
+			parseWebcastRoomUserSeqMessage(msg.Payload)
+			// TODO update local registry
 		case "WebcastUpdateFanTicketMessage":
-			unPackWebcastUpdateFanTicketMessage(msg.Payload)
+			parseWebcastUpdateFanTicketMessage(msg.Payload)
 		case "WebcastCommonTextMessage":
-			unPackWebcastCommonTextMessage(msg.Payload)
+			parseWebcastCommonTextMessage(msg.Payload)
 		default:
 			logger.Info("[onMessage] [⚠️" + msg.Method + "未知消息～]")
 		}
 	}
 }
 
-func unPackWebcastMemberMessage(payload []byte) {
+func parseWebcastMemberMessage(payload []byte) {
 	chatMessage := &protostub.MemberMessage{}
 	proto.Unmarshal(payload, chatMessage)
 	jsonData, _ := json.Marshal(chatMessage)
 	var dataMap map[string]interface{}
 	json.Unmarshal(jsonData, &dataMap)
 	log := string(jsonData)
-	logger.Infof("[unPackWebcastMemberMessage] [🚹🚺直播间成员加入消息] ｜ " + log)
+	logger.Info("[parseWebcastMemberMessage] [🏠加入房间消息] ｜ ", log)
 }
 
-func unPackWebcastLikeMessage(payload []byte) {
+func parseWebcastLikeMessage(payload []byte) *protostub.LikeMessage {
 	chatMessage := &protostub.LikeMessage{}
 	proto.Unmarshal(payload, chatMessage)
 	jsonData, _ := json.Marshal(chatMessage)
 	var dataMap map[string]interface{}
 	json.Unmarshal(jsonData, &dataMap)
 	log := string(jsonData)
-	logger.Info("[unPackWebcastLikeMessage] [👍直播间点赞消息]" + log)
+	logger.Info("[parseWebcastLikeMessage] [👍点赞消息] ｜ ", log)
+	return chatMessage
 }
 
-func unPackMatchAgainstScoreMessage(payload []byte) {
+func parseMatchAgainstScoreMessage(payload []byte) *protostub.MatchAgainstScoreMessage {
 	chatMessage := &protostub.MatchAgainstScoreMessage{}
 	proto.Unmarshal(payload, chatMessage)
 	jsonData, _ := json.Marshal(chatMessage)
 	var dataMap map[string]interface{}
 	json.Unmarshal(jsonData, &dataMap)
 	log := string(jsonData)
-	logger.Info("[unPackMatchAgainstScoreMessage] [🤷不知道是啥的消息] ｜ " + log)
+	logger.Info("[parseMatchAgainstScoreMessage] [📌MatchAgainstScoreMessage] ｜ ", log)
+	return chatMessage
 }
 
-func unPackWebcastChatMessage(data []byte) map[string]interface{} {
+func parseWebcastChatMessage(data []byte) *protostub.ChatMessage {
 	chatMessage := &protostub.ChatMessage{}
 	proto.Unmarshal(data, chatMessage)
 	jsonData, _ := json.Marshal(chatMessage)
 	var dataMap map[string]interface{}
 	json.Unmarshal(jsonData, &dataMap)
 	log := string(jsonData)
-	logger.Info("[unPackWebcastChatMessage] [📧直播间弹幕消息]｜ %s", log)
-	return dataMap
+	logger.Info("[parseWebcastChatMessage] [✉️直播间弹幕评论]｜", log)
+	return chatMessage
 }
 
-func unPackWebcastGiftMessage(data []byte) {
+func parseWebcastGiftMessage(data []byte) *protostub.GiftMessage {
 	giftMessage := &protostub.GiftMessage{}
 	proto.Unmarshal(data, giftMessage)
 	jsonData, _ := json.Marshal(giftMessage)
 	var dataMap map[string]interface{}
 	json.Unmarshal(jsonData, &dataMap)
 	log := string(jsonData)
-	logger.Info("[unPackWebcastGiftMessage] [🎁直播间礼物消息] ｜ " + log)
+	logger.Info("[parseWebcastGiftMessage] [🎁直播间礼物] ｜ ", log)
+	return giftMessage
 }
 
-func unPackWebcastCommonTextMessage(data []byte) {
+func parseWebcastCommonTextMessage(data []byte) *protostub.CommonTextMessage {
 	commonTextMessage := &protostub.CommonTextMessage{}
 	err := proto.Unmarshal(data, commonTextMessage)
 	if err != nil {
@@ -128,10 +133,11 @@ func unPackWebcastCommonTextMessage(data []byte) {
 		// Handle error
 	}
 
-	logger.Infof("[unPackWebcastCommonTextMessage] | %s", jsonStr)
+	logger.Info("[parseWebcastCommonTextMessage] |", jsonStr)
+	return commonTextMessage
 }
 
-func unPackWebcastUpdateFanTicketMessage(data []byte) map[string]interface{} {
+func parseWebcastUpdateFanTicketMessage(data []byte) *protostub.UpdateFanTicketMessage {
 	updateFanTicketMessage := &protostub.UpdateFanTicketMessage{}
 	err := proto.Unmarshal(data, updateFanTicketMessage)
 	if err != nil {
@@ -150,11 +156,11 @@ func unPackWebcastUpdateFanTicketMessage(data []byte) map[string]interface{} {
 		// Handle error
 	}
 
-	logger.Info("[unPackWebcastUpdateFanTicketMessage]｜ " + jsonStr)
-	return dataMap
+	logger.Info("[parseWebcastUpdateFanTicketMessage] [💝粉丝数更新消息]｜ ", jsonStr)
+	return updateFanTicketMessage
 }
 
-func unPackWebcastRoomUserSeqMessage(data []byte) map[string]interface{} {
+func parseWebcastRoomUserSeqMessage(data []byte) *protostub.RoomUserSeqMessage {
 	roomUserSeqMessage := &protostub.RoomUserSeqMessage{}
 	err := proto.Unmarshal(data, roomUserSeqMessage)
 	if err != nil {
@@ -167,17 +173,11 @@ func unPackWebcastRoomUserSeqMessage(data []byte) map[string]interface{} {
 		// Handle error
 	}
 
-	var dataMap map[string]interface{}
-	err = json.Unmarshal([]byte(jsonStr), &dataMap)
-	if err != nil {
-		// Handle error
-	}
-
-	logger.Infof("[unPackWebcastRoomUserSeqMessage] [️🏄🏂用户信息]｜ " + jsonStr)
-	return dataMap
+	logger.Info("[parseWebcastRoomUserSeqMessage] [️🏂用户榜单信息]｜ ", jsonStr)
+	return roomUserSeqMessage
 }
 
-func unPackWebcastSocialMessage(data []byte) map[string]interface{} {
+func parseWebcastSocialMessage(data []byte) *protostub.SocialMessage {
 	socialMessage := &protostub.SocialMessage{}
 	err := proto.Unmarshal(data, socialMessage)
 	if err != nil {
@@ -196,8 +196,8 @@ func unPackWebcastSocialMessage(data []byte) map[string]interface{} {
 		// Handle error
 	}
 
-	logger.Infof("[unPackWebcastSocialMessage] [➕直播间关注消息] ｜ " + jsonStr)
-	return dataMap
+	logger.Info("[parseWebcastSocialMessage] [➕直播间关注消息] ｜ ", jsonStr)
+	return socialMessage
 }
 
 func sendAck(ws *websocket.Conn, logId uint64, internalExt string) {

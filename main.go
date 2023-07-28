@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"live-room-crawler/connector"
+	"live-room-crawler/local_server"
 	"live-room-crawler/util"
 )
 
@@ -35,6 +36,7 @@ func main() {
 	logger.Infof("ready to crawl url:%s on port:%d", liveUrl, port)
 
 	roomInfo := connector.RetrieveRoomInfoFromHttpCall(liveUrl)
-	connector.WssServerStart(roomInfo)
+	localServer := local_server.StartLocalServer(port, roomInfo)
+	connector.StartDouyinConnection(roomInfo, localServer)
 
 }
