@@ -42,7 +42,7 @@ func StartDouyinConnection(roomInfo *local_server.RoomInfo, server local_server.
 			break
 		}
 
-		listener.OnMessage(message, conn)
+		listener.OnMessage(message, conn, server)
 	}
 }
 

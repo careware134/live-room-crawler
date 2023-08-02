@@ -1,6 +1,7 @@
 package local_server
 
 import (
+	"encoding/json"
 	"github.com/gorilla/websocket"
 	"live-room-crawler/util"
 	"net/http"
@@ -21,7 +22,7 @@ func StartLocalServer(port int, roomInfo *RoomInfo) LocalClientRegistry {
 
 	// Define a handler function for WebSocket connections
 	// Register the handler function for requests to the "/ws" path
-	http.HandleFunc("/", listenHandler)
+	http.HandleFunc("/v1", listenHandler)
 
 	go reg.checkHeartbeats()
 
@@ -53,13 +54,18 @@ func (r *LocalClientRegistry) removeClient(client *websocket.Conn) {
 	delete(r.heartbeatLostRegistry, client)
 }
 
-func (r *LocalClientRegistry) Broadcast(message []byte) {
+func (r *LocalClientRegistry) Broadcast(response *CommandResponse) {
 	r.m.Lock()
 	defer r.m.Unlock()
 	for client := range r.clients {
-		err := client.WriteMessage(websocket.TextMessage, message)
+		marshal, err := json.Marshal(response)
 		if err != nil {
-			logger.Println(err)
+			logger.Info("Broadcast error Marshal:", err)
+			continue
+		}
+		err = client.WriteMessage(websocket.TextMessage, marshal)
+		if err != nil {
+			logger.Info("Broadcast error WriteMessage:", err)
 			r.removeClient(client)
 		}
 	}
@@ -119,10 +125,26 @@ func listenHandler(w http.ResponseWriter, r *http.Request) {
 		if messageType == websocket.TextMessage {
 			reg.heartbeatLostRegistry[conn] = 0
 			// response to the client
-			reg.ResponseClient(message)
+			response := reg.OnCommand(message)
+			marshal, err := json.Marshal(response)
+			if err != nil {
+				logger.Error("listenHandler fail to Marshal json response:", err)
+				continue
+			}
+			err = conn.WriteMessage(messageType, marshal)
+			if err != nil {
+				logger.Errorf("listenHandler fail to WriteMessage for conn:%s error:%e", conn.RemoteAddr(), err)
+				continue
+			}
 		} else if messageType == websocket.PingMessage {
-			// update the heartbeat losts count for this client
+			// update the heartbeat lost count for this client
 			reg.heartbeatLostRegistry[conn] = 0
+			// response with pong
+			err = conn.WriteMessage(websocket.PongMessage, []byte("pong"))
+			if err != nil {
+				logger.Errorf("listenHandler fail to WriteMessage Pong for conn:%s error:%e", conn.RemoteAddr(), err)
+				continue
+			}
 		}
 	}
 

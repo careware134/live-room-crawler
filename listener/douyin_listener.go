@@ -5,16 +5,18 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"github.com/golang/protobuf/jsonpb"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"google.golang.org/protobuf/proto"
 	"io"
+	"live-room-crawler/local_server"
 	"live-room-crawler/protostub"
 	"live-room-crawler/util"
 )
 
 var logger = util.Logger()
 
-func OnMessage(message []byte, conn *websocket.Conn) {
+func OnMessage(message []byte, conn *websocket.Conn, server local_server.LocalClientRegistry) {
 	wssPackage := &protostub.PushFrame{}
 	proto.Unmarshal(message, wssPackage)
 
@@ -43,17 +45,42 @@ func OnMessage(message []byte, conn *websocket.Conn) {
 		case "WebcastMatchAgainstScoreMessage":
 			parseMatchAgainstScoreMessage(msg.Payload)
 		case "WebcastLikeMessage":
+			// 点赞消息WebcastLikeMessage；like,2
+			// .total .count eg.	"total": 34136,
 			parseWebcastLikeMessage(msg.Payload)
 		case "WebcastMemberMessage":
 			parseWebcastMemberMessage(msg.Payload)
 		case "WebcastGiftMessage":
+			// 礼物消息WebcastGiftMessage; gift,3
+			// .repeatCount 	"repeatCount": 10,
+			// .comboCount	"comboCount": 10,
+			// .common.describe e.g 		"describe": "长孙明亮:送给主播 10个你最好看",
 			parseWebcastGiftMessage(msg.Payload)
 		case "WebcastChatMessage":
-			parseWebcastChatMessage(msg.Payload)
+			// comment,6
+			chatMessage := parseWebcastChatMessage(msg.Payload)
+			response := &local_server.CommandResponse{
+				CommandType: local_server.PLAY,
+				TraceId:     uuid.NewString(),
+				Content: local_server.CrawlerResponseContent{
+					Text:        chatMessage.Content,
+					TriggerType: local_server.GUIDE,
+				},
+				RuleMeta: local_server.RuleMeta{
+					Id:   1,
+					Name: "MOCK-直播间评论播报规则",
+				},
+			}
+			server.Broadcast(response)
 		case "WebcastSocialMessage":
+			// 关注WebcastSocialMessage； follow,4
+			// .followCount, eg."followCount": "2193637",
 			parseWebcastSocialMessage(msg.Payload)
 		case "WebcastRoomUserSeqMessage":
 			//seqMessage := parseWebcastRoomUserSeqMessage(msg.Payload)
+			// 榜单数据
+			// .totalUser == totalPvForAnchor 浏览人数 view,5
+			// .total == onlineUserForAnchor 在线人数 online,1
 			parseWebcastRoomUserSeqMessage(msg.Payload)
 			// TODO update local registry
 		case "WebcastUpdateFanTicketMessage":
