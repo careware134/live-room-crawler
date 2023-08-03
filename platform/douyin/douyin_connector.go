@@ -1,4 +1,4 @@
-package connector
+package douyin
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spyzhov/ajson"
 	"io"
-	"live-room-crawler/listener"
+	"live-room-crawler/common"
 	"live-room-crawler/local_server"
 	"live-room-crawler/util"
 	"net/http"
@@ -16,11 +16,15 @@ import (
 )
 
 var (
-	roomInfo local_server.RoomInfo
-	logger   *log.Entry = util.Logger()
+	logger *log.Entry = util.Logger()
 )
 
-func StartDouyinConnection(roomInfo *local_server.RoomInfo, server local_server.LocalClientRegistry) {
+type Connector struct {
+	RoomInfo            common.RoomInfo
+	LocalClientRegistry *local_server.LocalClientRegistry
+}
+
+func (c *Connector) StartConnection(roomInfo *common.RoomInfo) {
 	websocketUrl := strings.ReplaceAll(util.WebSocketTemplateURL, util.RoomIdPlaceHolder, roomInfo.RoomId)
 	header := http.Header{
 		"cookie":     []string{"ttwid=" + roomInfo.Ttwid},
@@ -30,7 +34,7 @@ func StartDouyinConnection(roomInfo *local_server.RoomInfo, server local_server.
 	conn, _, err := websocket.DefaultDialer.Dial(websocketUrl, header)
 
 	if err != nil {
-		log.Fatalf("fatal to dial websocket! url: %s", websocketUrl, err)
+		logger.Fatalf("fatal to dial websocket! url: %s error:%e", websocketUrl, err)
 		return
 	}
 	defer conn.Close()
@@ -42,11 +46,14 @@ func StartDouyinConnection(roomInfo *local_server.RoomInfo, server local_server.
 			break
 		}
 
-		listener.OnMessage(message, conn, server)
+		updateRegistryStruct := OnMessage(message, conn)
+		if c.LocalClientRegistry != nil && len(updateRegistryStruct.ActionList) != 0 {
+			c.LocalClientRegistry.Broadcast(updateRegistryStruct)
+		}
 	}
 }
 
-func RetrieveRoomInfoFromHttpCall(liveUrl string) *local_server.RoomInfo {
+func (c *Connector) RetrieveRoomInfoFromHttpCall(liveUrl string) *common.RoomInfo {
 	// request room liveUrl
 	req, err := http.NewRequest("GET", liveUrl, nil)
 	if err != nil {
@@ -125,11 +132,12 @@ func RetrieveRoomInfoFromHttpCall(liveUrl string) *local_server.RoomInfo {
 		}
 	}
 
-	log.Infof("🎥start to crawl for RoomId: %s title: %s ttwid: %s", liveRoomId, liveRoomTitle, ttwid)
-	roomInfo = local_server.RoomInfo{
+	logger.Infof("🎥start to crawl for RoomId: %s title: %s ttwid: %s", liveRoomId, liveRoomTitle, ttwid)
+	c.RoomInfo = common.RoomInfo{
 		RoomId:    liveRoomId,
 		RoomTitle: liveRoomTitle,
 		Ttwid:     ttwid,
 	}
-	return &roomInfo
+
+	return &c.RoomInfo
 }

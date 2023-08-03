@@ -3,6 +3,7 @@ package local_server
 import (
 	"encoding/json"
 	"github.com/gorilla/websocket"
+	"live-room-crawler/common"
 	"live-room-crawler/util"
 	"net/http"
 	"strconv"
@@ -11,18 +12,17 @@ import (
 
 var logger = util.Logger()
 
-func StartLocalServer(port int, roomInfo *RoomInfo) LocalClientRegistry {
+func StartLocalServer(port int) LocalClientRegistry {
 	// Create a new registry
-	reg = LocalClientRegistry{
+	reg := LocalClientRegistry{
 		clients:               make(map[*websocket.Conn]int),
 		heartbeatLostRegistry: make(map[*websocket.Conn]int),
-		readyCommandRegistry:  make(map[*websocket.Conn]CommandRequest),
-		roomInfo:              roomInfo,
+		readyCommandRegistry:  make(map[*websocket.Conn]common.CommandRequest),
 	}
 
 	// Define a handler function for WebSocket connections
 	// Register the handler function for requests to the "/ws" path
-	http.HandleFunc("/v1", listenHandler)
+	http.HandleFunc("/v1", reg.listenHandler)
 
 	go reg.checkHeartbeats()
 
@@ -46,29 +46,19 @@ func (r *LocalClientRegistry) addClient(client *websocket.Conn) {
 	r.heartbeatLostRegistry[client] = 0
 }
 
+func (r *LocalClientRegistry) markReady(client *websocket.Conn, startRequest common.CommandRequest) {
+	r.m.Lock()
+	defer r.m.Unlock()
+	r.readyCommandRegistry[client] = startRequest
+}
+
 func (r *LocalClientRegistry) removeClient(client *websocket.Conn) {
 	r.m.Lock()
 	defer r.m.Unlock()
 	logger.Info("removeClient invoke client addr:", client.RemoteAddr())
 	delete(r.clients, client)
 	delete(r.heartbeatLostRegistry, client)
-}
-
-func (r *LocalClientRegistry) Broadcast(response *CommandResponse) {
-	r.m.Lock()
-	defer r.m.Unlock()
-	for client := range r.clients {
-		marshal, err := json.Marshal(response)
-		if err != nil {
-			logger.Info("Broadcast error Marshal:", err)
-			continue
-		}
-		err = client.WriteMessage(websocket.TextMessage, marshal)
-		if err != nil {
-			logger.Info("Broadcast error WriteMessage:", err)
-			r.removeClient(client)
-		}
-	}
+	delete(r.readyCommandRegistry, client)
 }
 
 func (r *LocalClientRegistry) checkHeartbeats() {
@@ -97,35 +87,41 @@ func (r *LocalClientRegistry) checkHeartbeats() {
 	}
 }
 
-func listenHandler(w http.ResponseWriter, r *http.Request) {
+func (r *LocalClientRegistry) listenHandler(response http.ResponseWriter, request *http.Request) {
 	// Define the WebSocket upgrade function
 	upgrade := websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
 
-	conn, err := upgrade.Upgrade(w, r, nil)
+	conn, err := upgrade.Upgrade(response, request, nil)
 	if err != nil {
 		logger.Println(err)
 		return
 	}
 
+	go r.handleConnection(conn)
+}
+
+func (r *LocalClientRegistry) handleConnection(conn *websocket.Conn) {
 	// Add the client to the registry
-	reg.addClient(conn)
+	r.addClient(conn)
+	// close conn finally
+	defer conn.Close()
 
 	// Read messages from the client
 	for {
 		messageType, message, err := conn.ReadMessage()
 		if err != nil {
 			logger.Warn("[local_server]read message [🆖] error:", err)
-			reg.removeClient(conn)
+			r.removeClient(conn)
 			continue
 		}
 
-		reg.heartbeatLostRegistry[conn] = 0
+		r.heartbeatLostRegistry[conn] = 0
 
 		// Handle the message
 		if messageType == websocket.TextMessage {
-			reg.heartbeatLostRegistry[conn] = 0
+			r.heartbeatLostRegistry[conn] = 0
 			// response to the client
-			response := reg.OnCommand(message)
+			response := r.OnCommand(conn, message)
 			marshal, err := json.Marshal(response)
 			if err != nil {
 				logger.Error("listenHandler fail to Marshal json response:", err)
@@ -138,14 +134,13 @@ func listenHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		} else if messageType == websocket.PingMessage {
 			// update the heartbeat lost count for this client
-			reg.heartbeatLostRegistry[conn] = 0
+			r.heartbeatLostRegistry[conn] = 0
 			// response with pong
-			err = conn.WriteMessage(websocket.PongMessage, []byte("pong"))
+			err = conn.WriteMessage(websocket.PongMessage, []byte("{\"type\":\"pong\"}"))
 			if err != nil {
 				logger.Errorf("listenHandler fail to WriteMessage Pong for conn:%s error:%e", conn.RemoteAddr(), err)
 				continue
 			}
 		}
 	}
-
 }

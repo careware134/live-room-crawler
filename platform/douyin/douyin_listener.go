@@ -1,22 +1,19 @@
-package listener
+package douyin
 
 import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
 	"github.com/golang/protobuf/jsonpb"
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"google.golang.org/protobuf/proto"
 	"io"
-	"live-room-crawler/local_server"
+	"live-room-crawler/common"
 	"live-room-crawler/protostub"
-	"live-room-crawler/util"
+	"time"
 )
 
-var logger = util.Logger()
-
-func OnMessage(message []byte, conn *websocket.Conn, server local_server.LocalClientRegistry) {
+func OnMessage(message []byte, conn *websocket.Conn) *common.UpdateRegistryEvent {
 	wssPackage := &protostub.PushFrame{}
 	proto.Unmarshal(message, wssPackage)
 
@@ -40,6 +37,10 @@ func OnMessage(message []byte, conn *websocket.Conn, server local_server.LocalCl
 		sendAck(conn, logId, payloadPackage.InternalExt)
 	}
 
+	updateRegistryStruct := &common.UpdateRegistryEvent{
+		Statistics: common.LiveStatisticsStruct{},
+		ActionList: []common.UserActionStruct{},
+	}
 	for _, msg := range payloadPackage.MessagesList {
 		switch msg.Method {
 		case "WebcastMatchAgainstScoreMessage":
@@ -47,7 +48,8 @@ func OnMessage(message []byte, conn *websocket.Conn, server local_server.LocalCl
 		case "WebcastLikeMessage":
 			// 点赞消息WebcastLikeMessage；like,2
 			// .total .count eg.	"total": 34136,
-			parseWebcastLikeMessage(msg.Payload)
+			likeMessage := parseWebcastLikeMessage(msg.Payload)
+			updateRegistryStruct.Statistics.Like = common.BuildStatisticsCounter(likeMessage.Count, false)
 		case "WebcastMemberMessage":
 			parseWebcastMemberMessage(msg.Payload)
 		case "WebcastGiftMessage":
@@ -55,34 +57,31 @@ func OnMessage(message []byte, conn *websocket.Conn, server local_server.LocalCl
 			// .repeatCount 	"repeatCount": 10,
 			// .comboCount	"comboCount": 10,
 			// .common.describe e.g 		"describe": "长孙明亮:送给主播 10个你最好看",
-			parseWebcastGiftMessage(msg.Payload)
+			giftMessage := parseWebcastGiftMessage(msg.Payload)
+			updateRegistryStruct.Statistics.Gift = common.AddStatisticsCounter(&updateRegistryStruct.Statistics.Gift, giftMessage.ComboCount)
 		case "WebcastChatMessage":
 			// comment,6
 			chatMessage := parseWebcastChatMessage(msg.Payload)
-			response := &local_server.CommandResponse{
-				CommandType: local_server.PLAY,
-				TraceId:     uuid.NewString(),
-				Content: local_server.CrawlerResponseContent{
-					Text:        chatMessage.Content,
-					TriggerType: local_server.GUIDE,
-				},
-				RuleMeta: local_server.RuleMeta{
-					Id:   1,
-					Name: "MOCK-直播间评论播报规则",
-				},
-			}
-			server.Broadcast(response)
+			updateRegistryStruct.Statistics.Comment = common.AddStatisticsCounter(&updateRegistryStruct.Statistics.Comment, 1)
+			updateRegistryStruct.ActionList = append(updateRegistryStruct.ActionList, common.UserActionStruct{
+				Action:    common.COMMENT,
+				Username:  chatMessage.GetUser().NickName,
+				Content:   chatMessage.Content,
+				EventTime: time.Unix(int64(chatMessage.EventTime), 0),
+			})
 		case "WebcastSocialMessage":
 			// 关注WebcastSocialMessage； follow,4
 			// .followCount, eg."followCount": "2193637",
-			parseWebcastSocialMessage(msg.Payload)
+			socialMessage := parseWebcastSocialMessage(msg.Payload)
+			updateRegistryStruct.Statistics.Follow = common.BuildStatisticsCounter(socialMessage.FollowCount, false)
 		case "WebcastRoomUserSeqMessage":
 			//seqMessage := parseWebcastRoomUserSeqMessage(msg.Payload)
 			// 榜单数据
 			// .totalUser == totalPvForAnchor 浏览人数 view,5
 			// .total == onlineUserForAnchor 在线人数 online,1
-			parseWebcastRoomUserSeqMessage(msg.Payload)
-			// TODO update local registry
+			seqMessage := parseWebcastRoomUserSeqMessage(msg.Payload)
+			updateRegistryStruct.Statistics.View = common.BuildStatisticsCounter(uint64(seqMessage.TotalUser), false)
+			updateRegistryStruct.Statistics.Online = common.BuildStatisticsCounter(uint64(seqMessage.Total), false)
 		case "WebcastUpdateFanTicketMessage":
 			parseWebcastUpdateFanTicketMessage(msg.Payload)
 		case "WebcastCommonTextMessage":
@@ -91,6 +90,8 @@ func OnMessage(message []byte, conn *websocket.Conn, server local_server.LocalCl
 			logger.Info("[onMessage] [⚠️" + msg.Method + "未知消息～]")
 		}
 	}
+
+	return updateRegistryStruct
 }
 
 func parseWebcastMemberMessage(payload []byte) {
