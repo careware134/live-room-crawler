@@ -3,15 +3,16 @@ package main
 import (
 	"flag"
 	"fmt"
+	"live-room-crawler/common"
 	"live-room-crawler/local_server"
-	"live-room-crawler/platform/douyin"
+	"live-room-crawler/platform"
 	"live-room-crawler/util"
 )
 
 var (
-	cliMode  bool   = false
-	platform string = "douyin"
-	liveUrl  string = "https://live.douyin.com/416700408775"
+	cliMode      bool   = false
+	platformName string = "douyin"
+	liveUrl      string = "https://live.douyin.com/416700408775"
 
 	serverMode bool = false
 	port       int
@@ -23,7 +24,7 @@ func main() {
 
 	flag.BoolVar(&cliMode, "c", false, "cli mode")
 	flag.BoolVar(&serverMode, "s", false, "server mode")
-	flag.StringVar(&platform, "platform", "douyin", "抖音直播间URL, eg: https://live.douyin.com/416700408775")
+	flag.StringVar(&platformName, "platform", "douyin", "抖音直播间URL, eg: https://live.douyin.com/416700408775")
 	flag.StringVar(&liveUrl, "url", "", "抖音直播间URL, eg: https://live.douyin.com/416700408775")
 	flag.IntVar(&port, "port", 50000, "verbose log")
 
@@ -49,16 +50,19 @@ func main() {
 		return
 	}
 
-	if cliMode && (platform == "" || liveUrl == "") {
+	if cliMode && (platformName == "" || liveUrl == "") {
 		fmt.Printf("-url参数需要指定；-platform需要指定")
 		return
 	}
 
 	if cliMode {
-		logger.Infof("ready to crawl platform:%s url:%s ", platform, liveUrl)
-		douyinConnector := douyin.Connector{}
-		roomInfo := douyinConnector.RetrieveRoomInfoFromHttpCall(liveUrl)
-		douyinConnector.StartConnection(roomInfo)
+		logger.Infof("ready to crawl platform:%s url:%s ", platformName, liveUrl)
+		platformConnector := platform.NewConnector(common.TargetStruct{
+			Platform: common.DOUYIN,
+			LiveURL:  liveUrl,
+		})
+
+		platformConnector.Start()
 	}
 
 	if serverMode {

@@ -4,7 +4,7 @@ import "time"
 
 type UpdateRegistryEvent struct {
 	Statistics LiveStatisticsStruct `json:"statistics,omitempty"`
-	ActionList []UserActionStruct   `json:"actionList,omitempty"`
+	ActionList []UserActionEvent    `json:"actionList,omitempty"`
 }
 
 type LiveStatisticsStruct struct {
@@ -25,7 +25,7 @@ const (
 	FOLLOW  ActionType = "follow"
 )
 
-type UserActionStruct struct {
+type UserActionEvent struct {
 	Username  string     `json:"username"`
 	Action    ActionType `json:"action"`
 	Content   string     `json:"content"`
@@ -55,4 +55,33 @@ func AddStatisticsCounter(base *StatisticCounter, count uint64) StatisticCounter
 
 func (c *StatisticCounter) AddCounter(count uint64) {
 	c.count += count
+}
+
+func (c *StatisticCounter) Add(other StatisticCounter) {
+	if other.incr {
+		c.count += other.count
+	} else {
+		c.count = other.count
+	}
+
+}
+
+func InitStatisticStruct() LiveStatisticsStruct {
+	return LiveStatisticsStruct{
+		Online:  BuildStatisticsCounter(0, false),
+		Like:    BuildStatisticsCounter(0, false),
+		Gift:    BuildStatisticsCounter(0, false),
+		Follow:  BuildStatisticsCounter(0, false),
+		View:    BuildStatisticsCounter(0, false),
+		Comment: BuildStatisticsCounter(0, false),
+	}
+}
+
+func (s *LiveStatisticsStruct) Add(other LiveStatisticsStruct) {
+	s.Online.Add(other.Online)
+	s.Like.Add(other.Like)
+	s.Gift.Add(other.Gift)
+	s.Follow.Add(other.Follow)
+	s.View.Add(other.View)
+	s.Comment.Add(other.Comment)
 }

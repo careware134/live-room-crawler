@@ -39,7 +39,7 @@ func OnMessage(message []byte, conn *websocket.Conn) *common.UpdateRegistryEvent
 
 	updateRegistryStruct := &common.UpdateRegistryEvent{
 		Statistics: common.LiveStatisticsStruct{},
-		ActionList: []common.UserActionStruct{},
+		ActionList: []common.UserActionEvent{},
 	}
 	for _, msg := range payloadPackage.MessagesList {
 		switch msg.Method {
@@ -63,7 +63,7 @@ func OnMessage(message []byte, conn *websocket.Conn) *common.UpdateRegistryEvent
 			// comment,6
 			chatMessage := parseWebcastChatMessage(msg.Payload)
 			updateRegistryStruct.Statistics.Comment = common.AddStatisticsCounter(&updateRegistryStruct.Statistics.Comment, 1)
-			updateRegistryStruct.ActionList = append(updateRegistryStruct.ActionList, common.UserActionStruct{
+			updateRegistryStruct.ActionList = append(updateRegistryStruct.ActionList, common.UserActionEvent{
 				Action:    common.COMMENT,
 				Username:  chatMessage.GetUser().NickName,
 				Content:   chatMessage.Content,

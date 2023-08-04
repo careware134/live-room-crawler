@@ -3,11 +3,10 @@ package douyin
 import (
 	"fmt"
 	"github.com/gorilla/websocket"
-	log "github.com/sirupsen/logrus"
 	"github.com/spyzhov/ajson"
 	"io"
 	"live-room-crawler/common"
-	"live-room-crawler/local_server"
+	"live-room-crawler/constant"
 	"live-room-crawler/util"
 	"net/http"
 	"net/url"
@@ -16,15 +15,29 @@ import (
 )
 
 var (
-	logger *log.Entry = util.Logger()
+	logger = util.Logger()
 )
 
-type Connector struct {
-	RoomInfo            common.RoomInfo
-	LocalClientRegistry *local_server.LocalClientRegistry
+type ConnectorStrategy struct {
+	liveUrl  string
+	RoomInfo *common.RoomInfo
+	conn     *websocket.Conn
 }
 
-func (c *Connector) StartConnection(roomInfo *common.RoomInfo) {
+func NewInstance(liveUrl string) *ConnectorStrategy {
+	logger.Infof("♪ NewInstance for url: %s", liveUrl)
+	return &ConnectorStrategy{
+		liveUrl: liveUrl,
+	}
+}
+
+func (c *ConnectorStrategy) Start() constant.ResponseStatus {
+	roomInfo := c.GetRoomInfo()
+	if roomInfo == nil {
+		logger.Infof("♪ Start douyin fail for url: %s title: %s", c.liveUrl, c.RoomInfo.RoomTitle)
+		return constant.INVALID_LIVE_URL
+	}
+
 	websocketUrl := strings.ReplaceAll(util.WebSocketTemplateURL, util.RoomIdPlaceHolder, roomInfo.RoomId)
 	header := http.Header{
 		"cookie":     []string{"ttwid=" + roomInfo.Ttwid},
@@ -32,30 +45,25 @@ func (c *Connector) StartConnection(roomInfo *common.RoomInfo) {
 	}
 
 	conn, _, err := websocket.DefaultDialer.Dial(websocketUrl, header)
+	c.conn = conn
+	logger.Infof("♪ Start douyin success for url: %s title: %s", c.liveUrl, c.RoomInfo.RoomTitle)
 
 	if err != nil {
 		logger.Fatalf("fatal to dial websocket! url: %s error:%e", websocketUrl, err)
-		return
+		return constant.CONNECTION_FAIL
 	}
-	defer conn.Close()
 
-	for {
-		_, message, err := conn.ReadMessage()
-		if err != nil {
-			fmt.Println(err)
-			break
-		}
-
-		updateRegistryStruct := OnMessage(message, conn)
-		if c.LocalClientRegistry != nil && len(updateRegistryStruct.ActionList) != 0 {
-			c.LocalClientRegistry.Broadcast(updateRegistryStruct)
-		}
-	}
+	return constant.SUCCESS
 }
 
-func (c *Connector) RetrieveRoomInfoFromHttpCall(liveUrl string) *common.RoomInfo {
+func (c *ConnectorStrategy) Stop() {
+	c.conn.Close()
+	logger.Infof("♪ Stop douyin for url: %s titl: %s", c.liveUrl, c.RoomInfo.RoomTitle)
+}
+
+func (c *ConnectorStrategy) GetRoomInfo() *common.RoomInfo {
 	// request room liveUrl
-	req, err := http.NewRequest("GET", liveUrl, nil)
+	req, err := http.NewRequest("GET", c.liveUrl, nil)
 	if err != nil {
 		fmt.Println(err)
 		return nil
@@ -104,7 +112,7 @@ func (c *Connector) RetrieveRoomInfoFromHttpCall(liveUrl string) *common.RoomInf
 	}
 
 	// Retrieve the value of the "name" field using JSONPath
-	liveRoomIdNodes, err := root.JSONPath("$.app.initialState.roomStore.roomInfo.roomId")
+	liveRoomIdNodes, err := root.JSONPath("$.app.initialState.roomStore.RoomInfo.roomId")
 	if err != nil {
 		panic(err)
 	}
@@ -115,7 +123,7 @@ func (c *Connector) RetrieveRoomInfoFromHttpCall(liveUrl string) *common.RoomInf
 		break
 	}
 
-	liveRoomTitleNodes, err := root.JSONPath("$.app.initialState.roomStore.roomInfo.room.title")
+	liveRoomTitleNodes, err := root.JSONPath("$.app.initialState.roomStore.RoomInfo.room.title")
 	if err != nil {
 		panic(err)
 	}
@@ -133,11 +141,12 @@ func (c *Connector) RetrieveRoomInfoFromHttpCall(liveUrl string) *common.RoomInf
 	}
 
 	logger.Infof("🎥start to crawl for RoomId: %s title: %s ttwid: %s", liveRoomId, liveRoomTitle, ttwid)
-	c.RoomInfo = common.RoomInfo{
+	c.RoomInfo = &common.RoomInfo{
 		RoomId:    liveRoomId,
 		RoomTitle: liveRoomTitle,
 		Ttwid:     ttwid,
 	}
 
-	return &c.RoomInfo
+	logger.Infof("♪ GetRoomInfo douyin for url: %s titlt: %s", c.liveUrl, c.RoomInfo.RoomTitle)
+	return c.RoomInfo
 }

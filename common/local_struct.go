@@ -1,5 +1,7 @@
 package common
 
+import "live-room-crawler/constant"
+
 type CommandType string
 
 const (
@@ -25,6 +27,13 @@ const (
 	AUDIO DrivenType = "audio"
 )
 
+type Platform string
+
+const (
+	DOUYIN   Platform = "douyin"   // 开始直播；开始直播信号
+	KUAISHOU Platform = "kuaishou" // ping响应
+)
+
 // CommandRequest 请求体
 type CommandRequest struct {
 	CommandType CommandType   `json:"type"`
@@ -40,22 +49,22 @@ type ServiceStruct struct {
 }
 
 type TargetStruct struct {
-	Platform string `json:"platform"`
-	LiveURL  string `json:"live_url"`
+	Platform Platform `json:"platform"`
+	LiveURL  string   `json:"live_url"`
 }
 
 // CommandResponse 响应体
 type CommandResponse struct {
-	CommandType    CommandType    `json:"type,omitempty"`
-	TraceId        string         `json:"trace_id,omitempty"`
-	Content        PlayContent    `json:"content,omitempty"`
-	RuleMeta       RuleMeta       `json:"rule_meta,omitempty"`
-	Room           RoomInfo       `json:"room,omitempty"`
-	ResponseStatus ResponseStatus `json:"status,omitempty"`
+	CommandType    CommandType             `json:"type,omitempty"`
+	TraceId        string                  `json:"trace_id,omitempty"`
+	Content        PlayContent             `json:"content,omitempty"`
+	RuleMeta       RuleMeta                `json:"rule_meta,omitempty"`
+	Room           RoomInfo                `json:"room,omitempty"`
+	ResponseStatus constant.ResponseStatus `json:"status,omitempty"`
 }
 
 type PlayContent struct {
-	DrivenType DrivenType `json:"trigger_type,omitempty"`
+	DrivenType DrivenType `json:"driven_type,omitempty"`
 	Text       string     `json:"text,omitempty"`
 	Audio      string     `json:"audio,omitempty"`
 }
@@ -69,13 +78,7 @@ type RuleMeta struct {
 }
 
 type RoomInfo struct {
-	RoomId    string
-	RoomTitle string
-	Ttwid     string
-}
-
-type ResponseStatus struct {
-	Success bool   `json:"success,omitempty"`
-	Code    string `json:"code,omitempty"`
-	Message string `json:"message,omitempty"`
+	RoomId    string `json:"room_id,omitempty"`
+	RoomTitle string `json:"title,omitempty"`
+	Ttwid     string `json:"ttwid,omitempty"`
 }
