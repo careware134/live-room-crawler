@@ -1,6 +1,7 @@
 package platform
 
 import (
+	"github.com/gorilla/websocket"
 	"live-room-crawler/common"
 	"live-room-crawler/constant"
 	"live-room-crawler/platform/douyin"
@@ -9,9 +10,13 @@ import (
 type IPlatformConnectorStrategy interface {
 	GetRoomInfo() *common.RoomInfo
 
-	Start() constant.ResponseStatus
+	Connect(localConn *websocket.Conn) constant.ResponseStatus
+
+	StartListen(localConn *websocket.Conn)
 
 	Stop()
+
+	IsAlive() bool
 }
 
 func NewConnector(targetStruct common.TargetStruct) IPlatformConnectorStrategy {

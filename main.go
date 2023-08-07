@@ -4,8 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"live-room-crawler/common"
-	"live-room-crawler/local_server"
 	"live-room-crawler/platform"
+	"live-room-crawler/server"
 	"live-room-crawler/util"
 )
 
@@ -62,11 +62,14 @@ func main() {
 			LiveURL:  liveUrl,
 		})
 
-		platformConnector.Start()
+		platformConnector.Connect(nil)
+		go platformConnector.StartListen(nil)
+		fmt.Scanln() // Wait for user input
+
 	}
 
 	if serverMode {
-		local_server.StartLocalServer(port)
+		server.StartLocalServer(port)
 	}
 
 }

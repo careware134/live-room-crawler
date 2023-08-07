@@ -1,11 +1,20 @@
 package common
 
-import "time"
+import (
+	"github.com/google/uuid"
+	"time"
+)
 
-type UpdateRegistryEvent struct {
-	Statistics LiveStatisticsStruct `json:"statistics,omitempty"`
-	ActionList []UserActionEvent    `json:"actionList,omitempty"`
-}
+type CounterType string
+
+const (
+	ONLINE  CounterType = "online"
+	LIKE    CounterType = "enter"
+	GIFT    CounterType = "gift"
+	FOLLOW  CounterType = "follow"
+	VIEW    CounterType = "view"
+	COMMENT CounterType = "comment"
+)
 
 type LiveStatisticsStruct struct {
 	Online  StatisticCounter `json:"online,omitempty"`
@@ -19,10 +28,10 @@ type LiveStatisticsStruct struct {
 type ActionType string
 
 const (
-	COMMENT ActionType = "comment"
-	ENTER   ActionType = "enter"
-	GIFT    ActionType = "gift"
-	FOLLOW  ActionType = "follow"
+	ON_COMMENT ActionType = "comment"
+	ON_ENTER   ActionType = "enter"
+	ON_GIFT    ActionType = "gift"
+	ON_FOLLOW  ActionType = "follow"
 )
 
 type UserActionEvent struct {
@@ -30,6 +39,18 @@ type UserActionEvent struct {
 	Action    ActionType `json:"action"`
 	Content   string     `json:"content"`
 	EventTime time.Time  ``
+}
+
+func (event *UserActionEvent) ToPlayMessage() *CommandResponse {
+	response := &CommandResponse{
+		CommandType: PLAY,
+		TraceId:     "play-" + uuid.NewString(),
+		Content: PlayContent{
+			DrivenType: TEXT,
+			Text:       event.Content,
+		},
+	}
+	return response
 }
 
 type StatisticCounter struct {
@@ -84,4 +105,25 @@ func (s *LiveStatisticsStruct) Add(other LiveStatisticsStruct) {
 	s.Follow.Add(other.Follow)
 	s.View.Add(other.View)
 	s.Comment.Add(other.Comment)
+}
+
+func (s *LiveStatisticsStruct) AddCounter(counterType CounterType, other StatisticCounter) {
+	if counterType == ONLINE {
+		s.Online.Add(other)
+	}
+	if counterType == LIKE {
+		s.Like.Add(other)
+	}
+	if counterType == GIFT {
+		s.Gift.Add(other)
+	}
+	if counterType == FOLLOW {
+		s.Follow.Add(other)
+	}
+	if counterType == VIEW {
+		s.View.Add(other)
+	}
+	if counterType == COMMENT {
+		s.Comment.Add(other)
+	}
 }

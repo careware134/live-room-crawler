@@ -1,9 +1,11 @@
-package local_server
+package server
 
 import (
 	"encoding/json"
 	"github.com/gorilla/websocket"
-	"live-room-crawler/registry"
+	"live-room-crawler/common"
+	"live-room-crawler/registry/connection"
+	"live-room-crawler/registry/data"
 	"live-room-crawler/util"
 	"net/http"
 	"strconv"
@@ -13,22 +15,23 @@ var logger = util.Logger()
 
 func StartLocalServer(port int) {
 	// get registry instance
-	clientRegistry := registry.GetInstance()
+	clientRegistry := connection.GetClientRegistry()
+	dataRegistry := data.GetDataRegistry()
 
 	// Define a handler function for WebSocket connections
 	// Register the handler function for requests to the "/ws" path
 	http.HandleFunc("/v1", listenHandler)
 
 	go clientRegistry.StartHeartbeatsCheck()
-	go clientRegistry.StartPushPlayMessage()
+	go dataRegistry.StartPushPlayMessage()
 
-	// Start the local_server
-	logger.Info("[local_server]Starting local_server on port:", port)
+	// Start the server
+	logger.Info("[server]Starting server on port:", port)
 	addr := ":" + strconv.Itoa(port)
 
 	err := http.ListenAndServe(addr, nil)
 	if err != nil {
-		logger.Fatal("[local_server]ListenAndServe Fail with err: ", err)
+		logger.Fatal("[server]ListenAndServe Fail with err: ", err)
 	}
 }
 
@@ -46,21 +49,21 @@ func listenHandler(response http.ResponseWriter, request *http.Request) {
 }
 
 func StartListenConnection(conn *websocket.Conn) {
-	// Add the client to the registry
-	clientRegistry := registry.GetInstance()
+	// Add the connection to the registry
+	clientRegistry := connection.GetClientRegistry()
 	clientRegistry.AddClient(conn)
 
 	// close conn finally
 	defer conn.Close()
 
-	client := NewClient(*conn)
+	client := connection.NewClient(conn)
 
-	// Read messages from the client
+	// Read messages from the connection
 	for {
 		messageType, message, err := conn.ReadMessage()
 		if err != nil {
-			logger.Warn("[local_server]StartListenConnection FAIL to read message [🆖] error:", err)
-			clientRegistry.RemoveClient(conn)
+			logger.Warn("[server]StartListenConnection FAIL to read message [🆖] error:", err)
+			clientRegistry.RemoveClient(conn, true)
 			break
 		}
 
@@ -69,11 +72,16 @@ func StartListenConnection(conn *websocket.Conn) {
 		// Handle the message
 		if messageType == websocket.TextMessage {
 			clientRegistry.HeartbeatLostRegistry[conn] = 0
-			// response to the client
-			response := client.OnCommand(conn, message)
+			// response to the connection
+			response := client.OnCommand(message)
+			if response.CommandType == common.STOP && response.ResponseStatus.Success {
+				logger.Warnf("[server]🪝StartListenConnection Break by stop request: %s", message)
+				break
+			}
+
 			marshal, err := json.Marshal(response)
 			if err != nil {
-				logger.Error("listenHandler fail to Marshal json response:", err)
+				logger.Errorf("listenHandler fail to Marshal json response:%e", err)
 				continue
 			}
 			err = conn.WriteMessage(messageType, marshal)
@@ -82,7 +90,7 @@ func StartListenConnection(conn *websocket.Conn) {
 				continue
 			}
 		} else if messageType == websocket.PingMessage {
-			// update the heartbeat lost count for this client
+			// update the heartbeat lost count for this connection
 			clientRegistry.HeartbeatLostRegistry[conn] = 0
 			// response with pong
 			err = conn.WriteMessage(websocket.PongMessage, []byte("{\"type\":\"pong\"}"))

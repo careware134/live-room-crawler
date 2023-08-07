@@ -22,6 +22,8 @@ type ConnectorStrategy struct {
 	liveUrl  string
 	RoomInfo *common.RoomInfo
 	conn     *websocket.Conn
+	IsStart  bool
+	IsStop   bool
 }
 
 func NewInstance(liveUrl string) *ConnectorStrategy {
@@ -31,10 +33,10 @@ func NewInstance(liveUrl string) *ConnectorStrategy {
 	}
 }
 
-func (c *ConnectorStrategy) Start() constant.ResponseStatus {
+func (c *ConnectorStrategy) Connect(localConn *websocket.Conn) constant.ResponseStatus {
 	roomInfo := c.GetRoomInfo()
 	if roomInfo == nil {
-		logger.Infof("♪ Start douyin fail for url: %s title: %s", c.liveUrl, c.RoomInfo.RoomTitle)
+		logger.Infof("♪ Start douyin fail for url: %s", c.liveUrl)
 		return constant.INVALID_LIVE_URL
 	}
 
@@ -52,16 +54,43 @@ func (c *ConnectorStrategy) Start() constant.ResponseStatus {
 		logger.Fatalf("fatal to dial websocket! url: %s error:%e", websocketUrl, err)
 		return constant.CONNECTION_FAIL
 	}
-
 	return constant.SUCCESS
 }
 
+func (c *ConnectorStrategy) StartListen(localConn *websocket.Conn) {
+	logger.Infof("StartListen for room:%s", c.RoomInfo.RoomTitle)
+	c.IsStart = true
+	for c.IsStart {
+		_, message, err := c.conn.ReadMessage()
+		if err != nil {
+			logger.Errorf("StartListen fail with reason: %e", err)
+			c.Stop()
+			break
+		}
+
+		OnMessage(message, c.conn, localConn)
+	}
+}
+
 func (c *ConnectorStrategy) Stop() {
+	c.IsStart = false
+	c.IsStop = true
 	c.conn.Close()
 	logger.Infof("♪ Stop douyin for url: %s titl: %s", c.liveUrl, c.RoomInfo.RoomTitle)
 }
 
+func (c *ConnectorStrategy) IsAlive() bool {
+	return c.IsStop
+}
+
 func (c *ConnectorStrategy) GetRoomInfo() *common.RoomInfo {
+	if c.RoomInfo != nil {
+		return c.RoomInfo
+	}
+	return c.getRoomInfoByRequest()
+}
+
+func (c *ConnectorStrategy) getRoomInfoByRequest() *common.RoomInfo {
 	// request room liveUrl
 	req, err := http.NewRequest("GET", c.liveUrl, nil)
 	if err != nil {
@@ -69,14 +98,14 @@ func (c *ConnectorStrategy) GetRoomInfo() *common.RoomInfo {
 		return nil
 	}
 
-	// construct header to simulate client
+	// construct header to simulate connection
 	req.Header = http.Header{
 		"Accept":     []string{"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"},
 		"User-Agent": []string{"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36"},
 		"Cookie":     []string{"__ac_nonce=0638733a400869171be51"},
 	}
 
-	// Create a new HTTP client and send the request
+	// Create a new HTTP connection and send the request
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -112,7 +141,7 @@ func (c *ConnectorStrategy) GetRoomInfo() *common.RoomInfo {
 	}
 
 	// Retrieve the value of the "name" field using JSONPath
-	liveRoomIdNodes, err := root.JSONPath("$.app.initialState.roomStore.RoomInfo.roomId")
+	liveRoomIdNodes, err := root.JSONPath("$.app.initialState.roomStore.roomInfo.roomId")
 	if err != nil {
 		panic(err)
 	}
@@ -123,7 +152,7 @@ func (c *ConnectorStrategy) GetRoomInfo() *common.RoomInfo {
 		break
 	}
 
-	liveRoomTitleNodes, err := root.JSONPath("$.app.initialState.roomStore.RoomInfo.room.title")
+	liveRoomTitleNodes, err := root.JSONPath("$.app.initialState.roomStore.roomInfo.room.title")
 	if err != nil {
 		panic(err)
 	}
@@ -140,13 +169,12 @@ func (c *ConnectorStrategy) GetRoomInfo() *common.RoomInfo {
 		}
 	}
 
-	logger.Infof("🎥start to crawl for RoomId: %s title: %s ttwid: %s", liveRoomId, liveRoomTitle, ttwid)
+	logger.Infof("♪ GetRoomInfo for RoomId: %s title: %s ttwid: %s", liveRoomId, liveRoomTitle, ttwid)
 	c.RoomInfo = &common.RoomInfo{
 		RoomId:    liveRoomId,
 		RoomTitle: liveRoomTitle,
 		Ttwid:     ttwid,
 	}
 
-	logger.Infof("♪ GetRoomInfo douyin for url: %s titlt: %s", c.liveUrl, c.RoomInfo.RoomTitle)
 	return c.RoomInfo
 }

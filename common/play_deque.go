@@ -20,6 +20,9 @@ func (d *PlayDeque) PushFront(item UserActionEvent) {
 }
 
 func (d *PlayDeque) PushBack(item UserActionEvent) {
+	if d.deque == nil {
+
+	}
 	if len(d.deque) >= d.maxSize {
 		d.deque = d.deque[1:]
 	}

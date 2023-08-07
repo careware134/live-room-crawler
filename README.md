@@ -28,3 +28,16 @@ protoc --go_out=. douyin.proto
 ```shell
 GOOS 
 ```
+
+接口协议：
+https://odd-card-01e.notion.site/web-socket-86f57165e3cd4ca09aaf056ec54ea414
+start指令
+```json
+{
+   "type": "start",
+   "target": {
+      "live_url" : "https://live.douyin.com/680726409770",
+      "platform": "douyin"
+   }
+}
+```
