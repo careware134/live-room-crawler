@@ -20,7 +20,7 @@ var (
 type ClientConnectionRegistry struct {
 	m                     sync.Mutex
 	clients               map[*websocket.Conn]int
-	HeartbeatLostRegistry map[*websocket.Conn]int
+	heartbeatLostRegistry map[*websocket.Conn]int
 	readyLocalClients     map[*websocket.Conn]*LocalClient
 }
 
@@ -29,7 +29,7 @@ func GetClientRegistry() *ClientConnectionRegistry {
 	once.Do(func() {
 		instance = &ClientConnectionRegistry{
 			clients:               make(map[*websocket.Conn]int),
-			HeartbeatLostRegistry: make(map[*websocket.Conn]int),
+			heartbeatLostRegistry: make(map[*websocket.Conn]int),
 			readyLocalClients:     make(map[*websocket.Conn]*LocalClient),
 		}
 	})
@@ -42,7 +42,7 @@ func (r *ClientConnectionRegistry) AddClient(client *websocket.Conn) {
 	logger.Info("AddClient invoked connection addr:", client.RemoteAddr())
 
 	r.clients[client] = 0
-	r.HeartbeatLostRegistry[client] = 0
+	r.heartbeatLostRegistry[client] = 0
 }
 
 func (r *ClientConnectionRegistry) MarkReady(
@@ -58,10 +58,15 @@ func (r *ClientConnectionRegistry) MarkReady(
 
 	r.clients[client] = 0
 	r.readyLocalClients[client] = localClient
-	r.HeartbeatLostRegistry[client] = 0
+	r.heartbeatLostRegistry[client] = 0
 
 	dataRegistry := data.GetDataRegistry()
 	dataRegistry.MarkReady(client, startRequest, roomInfo)
+}
+
+func (r *ClientConnectionRegistry) UpdateHeartBeat(client *websocket.Conn) {
+	logger.Info("UpdateHeartBeat for connection addr:", client.RemoteAddr())
+	r.heartbeatLostRegistry[client] = 0
 }
 
 func (r *ClientConnectionRegistry) RemoveClient(client *websocket.Conn, tryRevoke bool) {
@@ -71,11 +76,11 @@ func (r *ClientConnectionRegistry) RemoveClient(client *websocket.Conn, tryRevok
 	delete(r.clients, client)
 	localClient := r.readyLocalClients[client]
 	if tryRevoke && localClient != nil {
-		localClient.TryRevoke(nil)
+		localClient.TryRevoke()
 	}
 
 	delete(r.readyLocalClients, client)
-	delete(r.HeartbeatLostRegistry, client)
+	delete(r.heartbeatLostRegistry, client)
 
 	dataRegistry := data.GetDataRegistry()
 	dataRegistry.RemoveClient(client)
@@ -98,7 +103,7 @@ func (r *ClientConnectionRegistry) StartHeartbeatsCheck() {
 }
 
 func (r *ClientConnectionRegistry) evictHeartBeatLost() {
-	for client, missedHeartbeats := range r.HeartbeatLostRegistry {
+	for client, missedHeartbeats := range r.heartbeatLostRegistry {
 		if missedHeartbeats > 3 {
 			// If the connection has missed more than 3 heartbeat_losts, remove it
 			logger.Infoln("[ConnectionRegistry]remove connection for heartbeat timeout[🕔💔] address:", client.RemoteAddr())
@@ -110,7 +115,7 @@ func (r *ClientConnectionRegistry) evictHeartBeatLost() {
 				logger.Error("[server]fail to write pong to connection", err)
 				r.RemoveClient(client, true)
 			} else {
-				r.HeartbeatLostRegistry[client]++
+				r.heartbeatLostRegistry[client]++
 			}
 		}
 	}

@@ -24,12 +24,14 @@ type ConnectorStrategy struct {
 	conn     *websocket.Conn
 	IsStart  bool
 	IsStop   bool
+	StopChan chan struct{}
 }
 
 func NewInstance(liveUrl string) *ConnectorStrategy {
 	logger.Infof("♪ NewInstance for url: %s", liveUrl)
 	return &ConnectorStrategy{
-		liveUrl: liveUrl,
+		liveUrl:  liveUrl,
+		StopChan: make(chan struct{}),
 	}
 }
 
@@ -60,15 +62,21 @@ func (c *ConnectorStrategy) Connect(localConn *websocket.Conn) constant.Response
 func (c *ConnectorStrategy) StartListen(localConn *websocket.Conn) {
 	logger.Infof("StartListen for room:%s", c.RoomInfo.RoomTitle)
 	c.IsStart = true
-	for c.IsStart {
-		_, message, err := c.conn.ReadMessage()
-		if err != nil {
-			logger.Errorf("StartListen fail with reason: %e", err)
-			c.Stop()
-			break
-		}
+	for {
+		select {
+		case <-c.StopChan:
+			// Stop signal received, exit the goroutine
+			return
+		default:
+			_, message, err := c.conn.ReadMessage()
+			if err != nil {
+				logger.Errorf("StartListen fail with reason: %e", err)
+				c.Stop()
+				break
+			}
 
-		OnMessage(message, c.conn, localConn)
+			OnMessage(message, c.conn, localConn)
+		}
 	}
 }
 

@@ -60,44 +60,52 @@ func StartListenConnection(conn *websocket.Conn) {
 
 	// Read messages from the connection
 	for {
-		messageType, message, err := conn.ReadMessage()
-		if err != nil {
-			logger.Warn("[server]StartListenConnection FAIL to read message [🆖] error:", err)
-			clientRegistry.RemoveClient(conn, true)
-			break
+		select {
+		case <-client.StopChan:
+			// Stop signal received, exit the goroutine
+			return
+		default:
+			privateStartListen(&client, clientRegistry)
+		}
+	}
+}
+
+func privateStartListen(client *connection.LocalClient, clientRegistry *connection.ClientConnectionRegistry) {
+	conn := client.Conn
+	messageType, message, err := conn.ReadMessage()
+	if err != nil {
+		logger.Warn("[server]StartListenConnection FAIL to read message [🆖] error:", err)
+		clientRegistry.RemoveClient(conn, true)
+		client.TryRevoke()
+	}
+
+	// Handle the message
+	if messageType == websocket.TextMessage {
+		// response to the connection
+		response := client.OnCommand(message)
+		if response.CommandType == common.STOP && response.ResponseStatus.Success {
+			logger.Warnf("[server]🪝StartListenConnection Break by stop request: %s", message)
+			client.TryRevoke()
 		}
 
-		clientRegistry.HeartbeatLostRegistry[conn] = 0
-
-		// Handle the message
-		if messageType == websocket.TextMessage {
-			clientRegistry.HeartbeatLostRegistry[conn] = 0
-			// response to the connection
-			response := client.OnCommand(message)
-			if response.CommandType == common.STOP && response.ResponseStatus.Success {
-				logger.Warnf("[server]🪝StartListenConnection Break by stop request: %s", message)
-				break
-			}
-
-			marshal, err := json.Marshal(response)
-			if err != nil {
-				logger.Errorf("listenHandler fail to Marshal json response:%e", err)
-				continue
-			}
-			err = conn.WriteMessage(messageType, marshal)
-			if err != nil {
-				logger.Errorf("listenHandler fail to WriteMessage for conn:%s error:%e", conn.RemoteAddr(), err)
-				continue
-			}
-		} else if messageType == websocket.PingMessage {
-			// update the heartbeat lost count for this connection
-			clientRegistry.HeartbeatLostRegistry[conn] = 0
-			// response with pong
-			err = conn.WriteMessage(websocket.PongMessage, []byte("{\"type\":\"pong\"}"))
-			if err != nil {
-				logger.Errorf("listenHandler fail to WriteMessage Pong for conn:%s error:%e", conn.RemoteAddr(), err)
-				continue
-			}
+		marshal, err := json.Marshal(response)
+		if err != nil {
+			logger.Errorf("listenHandler fail to Marshal json response:%e", err)
+			client.TryRevoke()
+		}
+		err = conn.WriteMessage(messageType, marshal)
+		if err != nil {
+			logger.Errorf("listenHandler fail to WriteMessage for conn:%s error:%e", conn.RemoteAddr(), err)
+			client.TryRevoke()
+		}
+	} else if messageType == websocket.PingMessage {
+		// update the heartbeat lost count for this connection
+		clientRegistry.UpdateHeartBeat(conn)
+		// response with pong
+		err = conn.WriteMessage(websocket.PongMessage, []byte("{\"type\":\"pong\"}"))
+		if err != nil {
+			logger.Errorf("listenHandler fail to WriteMessage Pong for conn:%s error:%e", conn.RemoteAddr(), err)
+			client.TryRevoke()
 		}
 	}
 }

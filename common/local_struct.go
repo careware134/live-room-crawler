@@ -10,6 +10,7 @@ const (
 	LOAD CommandType = "load" // 更新规则
 	STOP CommandType = "stop"
 	PLAY CommandType = "play"
+	PING CommandType = "ping" // ping响应
 	PONG CommandType = "pong" // ping响应
 )
 

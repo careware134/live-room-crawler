@@ -18,11 +18,13 @@ type LocalClient struct {
 	Conn      *websocket.Conn
 	Start     bool
 	Stop      bool
+	StopChan  chan struct{} // Channel to signal stop
 }
 
 func NewClient(conn *websocket.Conn) LocalClient {
 	return LocalClient{
-		Conn: conn,
+		Conn:     conn,
+		StopChan: make(chan struct{}),
 	}
 }
 
@@ -43,6 +45,11 @@ func (client *LocalClient) OnCommand(
 		response = client.tryLoad(request)
 	case common.STOP:
 		response = client.TryStop(request)
+	case common.PING:
+		GetClientRegistry().UpdateHeartBeat(client.Conn)
+		response = &common.CommandResponse{
+			CommandType: common.PONG,
+		}
 	}
 
 	marshal, _ := json.Marshal(response)
@@ -123,7 +130,7 @@ func (client *LocalClient) TryStop(request *common.CommandRequest) *common.Comma
 	return response
 }
 
-func (client *LocalClient) TryRevoke(request *common.CommandRequest) *common.CommandResponse {
+func (client *LocalClient) TryRevoke() *common.CommandResponse {
 	response := &common.CommandResponse{
 		CommandType:    common.STOP,
 		TraceId:        "revoke-" + uuid.NewString(),
@@ -143,6 +150,7 @@ func (client *LocalClient) privateTryStop(response *common.CommandResponse) {
 	client.Start = false
 	client.Stop = true
 	client.Conn.Close()
+	close(client.StopChan)
 
 	(*client.Connector).Stop()
 }

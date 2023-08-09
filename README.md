@@ -26,7 +26,7 @@ protoc --go_out=. douyin.proto
 
 4. build
 ```shell
-GOOS 
+GOOS=windows GOARCH=amd64 go build -v -o live-room.crawler.exe ./
 ```
 
 接口协议：
