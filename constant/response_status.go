@@ -14,6 +14,7 @@ var (
 )
 
 const (
-	PlayDequeuePushInterval = 15
-	HeartbeatCheckInterval  = 15
+	PlayDequeuePushInterval = 1
+	HeartbeatCheckInterval  = 5
+	LogRound                = 60
 )

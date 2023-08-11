@@ -14,14 +14,14 @@ type IPlatformConnectorStrategy interface {
 
 	StartListen(localConn *websocket.Conn)
 
-	Stop()
+	Stop(signalClient bool)
 
 	IsAlive() bool
 }
 
-func NewConnector(targetStruct common.TargetStruct) IPlatformConnectorStrategy {
+func NewConnector(targetStruct common.TargetStruct, stopChan chan struct{}) IPlatformConnectorStrategy {
 	if targetStruct.Platform == common.DOUYIN {
-		return douyin.NewInstance(targetStruct.LiveURL)
+		return douyin.NewInstance(targetStruct.LiveURL, stopChan)
 	}
 	return nil
 }

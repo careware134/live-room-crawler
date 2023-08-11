@@ -18,20 +18,20 @@ var (
 
 type EventDataRegistry struct {
 	m             sync.Mutex
-	registryItems map[*websocket.Conn]*DataRegistryItem
+	registryItems map[*websocket.Conn]*RegistryItem
 }
 
 // GetDataRegistry returns the singleton instance
 func GetDataRegistry() *EventDataRegistry {
 	once.Do(func() {
 		instance = &EventDataRegistry{
-			registryItems: make(map[*websocket.Conn]*DataRegistryItem),
+			registryItems: make(map[*websocket.Conn]*RegistryItem),
 		}
 	})
 	return instance
 }
 
-type DataRegistryItem struct {
+type RegistryItem struct {
 	lostHeatBeatStamp int64
 	StartRequest      common.CommandRequest
 	RoomInfo          common.RoomInfo
@@ -50,7 +50,7 @@ func (r *EventDataRegistry) MarkReady(
 	marshal, _ := json.Marshal(roomInfo)
 	logger.Infof("🚘MarkReady invoked connection addr:%s room:%s", client.RemoteAddr(), marshal)
 
-	r.registryItems[client] = &DataRegistryItem{
+	r.registryItems[client] = &RegistryItem{
 		StartRequest: *startRequest,
 		RoomInfo:     *roomInfo,
 		Statistics:   common.InitStatisticStruct(),
@@ -65,17 +65,37 @@ func (r *EventDataRegistry) RemoveClient(client *websocket.Conn) {
 	logger.Info("✂️[EventDataRegistry]RemoveClient invoked connection addr:", client.RemoteAddr())
 }
 
+func (r *EventDataRegistry) WriteResponse(client *websocket.Conn, response *common.CommandResponse) error {
+	r.m.Lock()
+	defer r.m.Unlock()
+	marshal, err := json.Marshal(response)
+	if err != nil {
+		return err
+	}
+	if response.CommandType == common.PING {
+		err := client.WriteMessage(websocket.PongMessage, nil)
+		return err
+	} else {
+		err := client.WriteMessage(websocket.TextMessage, marshal)
+		logger.Infof("🖋[EventDataRegistry]WriteResponse invoked connection addr:%s response:%s", client.RemoteAddr(), marshal)
+		return err
+	}
+}
+
 func (r *EventDataRegistry) UpdateStatistics(client *websocket.Conn,
 	counterType common.CounterType,
 	counter common.StatisticCounter) {
 	r.m.Lock()
 	defer r.m.Unlock()
 	marshal, _ := json.Marshal(counter)
-	logger.Infof("UpdateStatistics for connection addr:%s type:%s counter:%s ", client.RemoteAddr(), counterType, marshal)
 
 	item := r.registryItems[client]
 	if item != nil {
 		item.Statistics.AddCounter(counterType, counter)
+		logger.Infof("UpdateStatistics for connection addr:%s type:%s counter:%s ", client.RemoteAddr(), counterType, marshal)
+
+	} else {
+		logger.Warnf("UpdateStatistics FAIL for connection addr:%s", client.RemoteAddr())
 	}
 }
 
@@ -86,7 +106,9 @@ func (r *EventDataRegistry) EnqueueAction(client *websocket.Conn, actionEvent co
 	logger.Infof("EnqueueAction invoked connection addr:%s event:%s", client.RemoteAddr(), marshal)
 
 	item := r.registryItems[client]
-	item.PlayDeque.PushBack(actionEvent)
+	if item != nil {
+		item.PlayDeque.PushBack(actionEvent)
+	}
 }
 
 func (r *EventDataRegistry) DequeueAction(client *websocket.Conn) *common.UserActionEvent {
@@ -103,8 +125,12 @@ func (r *EventDataRegistry) DequeueAction(client *websocket.Conn) *common.UserAc
 
 // StartPushPlayMessage 循环检查play队列，出队并推送
 func (r *EventDataRegistry) StartPushPlayMessage() {
+	round := 0
 	for {
-		logger.Infof("[EventDataRegistry]start StartPushPlayMessage[🎬] checking....ready clients size: %d", len(r.registryItems))
+		if round%constant.LogRound == 0 {
+			logger.Infof("[EventDataRegistry]start StartPushPlayMessage[🎬] checking....ready clients size: %d", len(r.registryItems))
+			round = 0
+		}
 
 		// Check each connected connection
 		for client, registryItem := range r.registryItems {
@@ -121,6 +147,7 @@ func (r *EventDataRegistry) StartPushPlayMessage() {
 
 		// Sleep for 10 seconds
 		time.Sleep(constant.PlayDequeuePushInterval * time.Second)
+		round++
 
 	}
 

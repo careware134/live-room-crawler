@@ -58,9 +58,9 @@ func main() {
 	if cliMode {
 		logger.Infof("ready to crawl platform:%s url:%s ", platformName, liveUrl)
 		platformConnector := platform.NewConnector(common.TargetStruct{
-			Platform: common.DOUYIN,
+			Platform: common.Platform(platformName),
 			LiveURL:  liveUrl,
-		})
+		}, make(chan struct{}))
 
 		platformConnector.Connect(nil)
 		go platformConnector.StartListen(nil)

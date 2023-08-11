@@ -48,8 +48,7 @@ func (r *ClientConnectionRegistry) AddClient(client *websocket.Conn) {
 func (r *ClientConnectionRegistry) MarkReady(
 	client *websocket.Conn,
 	startRequest *common.CommandRequest,
-	localClient *LocalClient,
-) {
+	localClient *LocalClient) {
 	r.m.Lock()
 	defer r.m.Unlock()
 	roomInfo := (*localClient.Connector).GetRoomInfo()
@@ -104,20 +103,16 @@ func (r *ClientConnectionRegistry) StartHeartbeatsCheck() {
 
 func (r *ClientConnectionRegistry) evictHeartBeatLost() {
 	for client, missedHeartbeats := range r.heartbeatLostRegistry {
+
 		if missedHeartbeats > 3 {
 			// If the connection has missed more than 3 heartbeat_losts, remove it
 			logger.Infoln("[ConnectionRegistry]remove connection for heartbeat timeout[🕔💔] address:", client.RemoteAddr())
 			r.RemoveClient(client, true)
 		} else {
-			// Otherwise, send a heartbeat and increment the missed heartbeat count
-			err := client.WriteMessage(websocket.PingMessage, []byte{})
-			if err != nil {
-				logger.Error("[server]fail to write pong to connection", err)
-				r.RemoveClient(client, true)
-			} else {
-				r.heartbeatLostRegistry[client]++
-			}
+			i := r.heartbeatLostRegistry[client]
+			r.heartbeatLostRegistry[client] = i + 1
 		}
+
 	}
 }
 

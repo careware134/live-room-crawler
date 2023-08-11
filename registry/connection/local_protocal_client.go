@@ -7,6 +7,8 @@ import (
 	"live-room-crawler/common"
 	"live-room-crawler/constant"
 	"live-room-crawler/platform"
+	"live-room-crawler/registry/data"
+
 	//"live-room-crawler/registry/connection"
 	"live-room-crawler/util"
 )
@@ -18,20 +20,72 @@ type LocalClient struct {
 	Conn      *websocket.Conn
 	Start     bool
 	Stop      bool
-	StopChan  chan struct{} // Channel to signal stop
+	stopChan  chan struct{} // Channel to signal stop
 }
 
 func NewClient(conn *websocket.Conn) LocalClient {
-	return LocalClient{
+	client := LocalClient{
 		Conn:     conn,
-		StopChan: make(chan struct{}),
+		stopChan: make(chan struct{}),
+	}
+	client.setPingHandler()
+	return client
+}
+
+func (client *LocalClient) StartListenConnection(conn *websocket.Conn) {
+	logger.Infof("[LocalClient]▶️StartListenConnection for client: %s", conn.RemoteAddr())
+
+	// close conn finally
+	defer conn.Close()
+
+	clientRegistry := GetClientRegistry()
+	dataRegistry := data.GetDataRegistry()
+
+	// Read messages from the connection
+	for {
+		select {
+		case <-client.stopChan:
+			// Stop signal received, exit the goroutine
+			logger.Infof("[LocalClient]⏹break StartListenConnection by client.stopChan for client: %s", conn.RemoteAddr())
+			return
+		default:
+			client.privateStartListen(clientRegistry, dataRegistry)
+		}
+	}
+}
+
+func (client *LocalClient) privateStartListen(clientRegistry *ClientConnectionRegistry, dataRegistry *data.EventDataRegistry) {
+	conn := client.Conn
+	messageType, message, err := conn.ReadMessage()
+	if err != nil {
+		logger.Warn("[LocalClient]StartListenConnection FAIL to read message [🆖] error:", err)
+		clientRegistry.RemoveClient(conn, true)
+		return
+	}
+
+	// Handle the message
+	if messageType == websocket.TextMessage {
+		// response to the connection
+		response := client.OnCommand(message)
+		if response.CommandType == common.STOP && response.ResponseStatus.Success {
+			logger.Warnf("[LocalClient]🪝StartListenConnection Break by stop request: %s", message)
+			client.TryRevoke()
+			return
+		}
+
+		err = dataRegistry.WriteResponse(conn, response)
+		if err != nil {
+			logger.Errorf("[LocalClient]listenHandler fail to WriteResponse for conn:%s error:%e", conn.RemoteAddr(), err)
+			client.TryRevoke()
+			return
+		}
 	}
 }
 
 func (client *LocalClient) OnCommand(
 	message []byte) *common.CommandResponse {
 
-	logger1.Infof("[🛎📩]OnCommand request is: %s", string(message))
+	logger1.Infof("[🛎📩LocalClient]OnCommand request is: %s", string(message))
 	request := &common.CommandRequest{}
 	json.Unmarshal(message, request)
 
@@ -40,11 +94,11 @@ func (client *LocalClient) OnCommand(
 	}
 	switch request.CommandType {
 	case common.START:
-		response = client.tryStart(request)
+		response = client.onStart(request)
 	case common.LOAD:
-		response = client.tryLoad(request)
+		response = client.onLoad(request)
 	case common.STOP:
-		response = client.TryStop(request)
+		response = client.onStop(request)
 	case common.PING:
 		GetClientRegistry().UpdateHeartBeat(client.Conn)
 		response = &common.CommandResponse{
@@ -53,13 +107,31 @@ func (client *LocalClient) OnCommand(
 	}
 
 	marshal, _ := json.Marshal(response)
-	logger1.Infof("[🛎📤]OnCommand response is: %s", marshal)
+	logger1.Infof("[🛎📤LocalClient]OnCommand response is: %s", marshal)
 	return response
 }
 
-func (client *LocalClient) tryStart(request *common.CommandRequest) *common.CommandResponse {
+func (client *LocalClient) setPingHandler() {
+	clientRegistry := GetClientRegistry()
+	dataRegistry := data.GetDataRegistry()
+	conn := client.Conn
+	conn.SetPingHandler(func(appData string) error {
+		clientRegistry.UpdateHeartBeat(conn)
+		// response with pong
+		err := dataRegistry.WriteResponse(conn, &common.CommandResponse{
+			CommandType: common.PONG,
+		})
+		if err != nil {
+			logger.Errorf("PingHandler fail to WriteMessage Pong for conn:%s error:%e", conn.RemoteAddr(), err)
+			//client.TryRevoke()
+		}
+		return nil
+	})
+}
+
+func (client *LocalClient) onStart(request *common.CommandRequest) *common.CommandResponse {
 	marshal, _ := json.Marshal(request)
-	logger1.Infof("🌏tryStart with request: %s", marshal)
+	logger1.Infof("🌏onStart with request: %s", marshal)
 
 	response := &common.CommandResponse{
 		CommandType: common.START,
@@ -67,7 +139,7 @@ func (client *LocalClient) tryStart(request *common.CommandRequest) *common.Comm
 	}
 
 	// create connector by start request
-	connector := platform.NewConnector(request.Target)
+	connector := platform.NewConnector(request.Target, client.stopChan)
 	client.Connector = &connector
 	// invoke connect
 	responseStatus := connector.Connect(client.Conn)
@@ -85,14 +157,14 @@ func (client *LocalClient) tryStart(request *common.CommandRequest) *common.Comm
 	client.Start = true
 
 	marshal, _ = json.Marshal(response)
-	logger1.Infof("🌏tryStart with response: %s", marshal)
+	logger1.Infof("🌏onStart with response: %s", marshal)
 
 	return response
 }
 
-func (client *LocalClient) tryLoad(request *common.CommandRequest) *common.CommandResponse {
+func (client *LocalClient) onLoad(request *common.CommandRequest) *common.CommandResponse {
 	marshal, _ := json.Marshal(request)
-	logger1.Infof("🌏tryLoad with request: %s", marshal)
+	logger1.Infof("🌏onLoad with request: %s", marshal)
 
 	response := &common.CommandResponse{
 		CommandType: common.LOAD,
@@ -101,14 +173,14 @@ func (client *LocalClient) tryLoad(request *common.CommandRequest) *common.Comma
 
 	response.ResponseStatus = constant.SUCCESS
 	marshal, _ = json.Marshal(response)
-	logger1.Infof("🌏tryLoad with response: %s", marshal)
+	logger1.Infof("🌏onLoad with response: %s", marshal)
 
 	return response
 }
 
-func (client *LocalClient) TryStop(request *common.CommandRequest) *common.CommandResponse {
+func (client *LocalClient) onStop(request *common.CommandRequest) *common.CommandResponse {
 	marshal, _ := json.Marshal(request)
-	logger1.Infof("🌏TryStop with request: %s", marshal)
+	logger1.Infof("🌏onStop with request: %s", marshal)
 
 	TraceId := request.TraceId
 	Message := constant.SUCCESS.Message
@@ -123,10 +195,9 @@ func (client *LocalClient) TryStop(request *common.CommandRequest) *common.Comma
 	}
 
 	client.privateTryStop(response)
-	GetClientRegistry().RemoveClient(client.Conn, false)
 
 	marshal, _ = json.Marshal(response)
-	logger1.Infof("🌏TryStop with response: %s", marshal)
+	logger1.Infof("🌏onStop with response: %s", marshal)
 	return response
 }
 
@@ -145,12 +216,17 @@ func (client *LocalClient) TryRevoke() *common.CommandResponse {
 }
 
 func (client *LocalClient) privateTryStop(response *common.CommandResponse) {
-	marshal, _ := json.Marshal(response)
-	client.Conn.WriteMessage(websocket.TextMessage, marshal)
+	data.GetDataRegistry().WriteResponse(client.Conn, response)
 	client.Start = false
-	client.Stop = true
 	client.Conn.Close()
-	close(client.StopChan)
 
-	(*client.Connector).Stop()
+	if !client.Stop {
+		close(client.stopChan)
+		client.Stop = true
+	}
+
+	if client.Connector != nil {
+		(*client.Connector).Stop(false)
+	}
+	logger.Infof("privateTryStop with client:%s", client.Conn.RemoteAddr())
 }
