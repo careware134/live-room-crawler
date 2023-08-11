@@ -143,17 +143,23 @@ func (client *LocalClient) onStart(request *common.CommandRequest) *common.Comma
 	client.Connector = &connector
 	// invoke connect
 	responseStatus := connector.Connect(client.Conn)
-	response.ResponseStatus = responseStatus
 	if !responseStatus.Success {
+		response.ResponseStatus = responseStatus
 		return response
 	}
 
-	// if connect success,
 	// .1 then start mark ready
 	GetClientRegistry().MarkReady(client.Conn, request, client)
-	// .2 start listen
+	// .2 if connect success, then load rule
+	responseStatus = data.GetDataRegistry().LoadRule(client.Conn)
+	if !responseStatus.Success {
+		response.ResponseStatus = responseStatus
+		return response
+	}
+
+	// .3 start listen
 	go connector.StartListen(client.Conn)
-	// .3 mark connection start
+	// .4 mark connection start
 	client.Start = true
 
 	marshal, _ = json.Marshal(response)
@@ -194,7 +200,9 @@ func (client *LocalClient) onStop(request *common.CommandRequest) *common.Comman
 		},
 	}
 
-	client.privateTryStop(response)
+	stopOnce.Do(func() {
+		client.privateTryStop(response)
+	})
 
 	marshal, _ = json.Marshal(response)
 	logger1.Infof("🌏onStop with response: %s", marshal)
@@ -211,18 +219,21 @@ func (client *LocalClient) TryRevoke() *common.CommandResponse {
 	marshal, _ := json.Marshal(response)
 	logger1.Infof("🌏TryRevoke with response: %s", marshal)
 
-	client.privateTryStop(response)
+	stopOnce.Do(func() {
+		client.privateTryStop(response)
+	})
+
 	return response
 }
 
 func (client *LocalClient) privateTryStop(response *common.CommandResponse) {
 	data.GetDataRegistry().WriteResponse(client.Conn, response)
-	client.Start = false
 	client.Conn.Close()
 
-	if !client.Stop {
+	if client.Start && !client.Stop {
 		close(client.stopChan)
 		client.Stop = true
+		client.Start = false
 	}
 
 	if client.Connector != nil {

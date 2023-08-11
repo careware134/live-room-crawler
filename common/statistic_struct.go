@@ -54,20 +54,22 @@ func (event *UserActionEvent) ToPlayMessage() *CommandResponse {
 }
 
 type StatisticCounter struct {
-	count uint64 `json:"count,omitempty"`
-	incr  bool   `json:"incr,omitempty"`
+	Count    uint64 `json:"count,omitempty"`
+	Incr     bool   `json:"incr,omitempty"`
+	LastPush int    `json:"lastPush,omitempty"`
 }
 
 func BuildStatisticsCounter(count uint64, incr bool) StatisticCounter {
 	return StatisticCounter{
-		count: count,
-		incr:  incr,
+		Count:    count,
+		LastPush: 0,
+		Incr:     incr,
 	}
 }
 
 func AddStatisticsCounter(base *StatisticCounter, count uint64) StatisticCounter {
 	if base != nil {
-		base.count += count
+		base.Count += count
 		return *base
 	}
 
@@ -75,14 +77,14 @@ func AddStatisticsCounter(base *StatisticCounter, count uint64) StatisticCounter
 }
 
 func (c *StatisticCounter) AddCounter(count uint64) {
-	c.count += count
+	c.Count += count
 }
 
 func (c *StatisticCounter) Add(other StatisticCounter) {
-	if other.incr {
-		c.count += other.count
+	if other.Incr {
+		c.Count += other.Count
 	} else {
-		c.count = other.count
+		c.Count = other.Count
 	}
 
 }

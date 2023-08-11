@@ -3,9 +3,14 @@ package data
 import (
 	"encoding/json"
 	"github.com/gorilla/websocket"
+	"io"
 	"live-room-crawler/common"
 	"live-room-crawler/constant"
 	"live-room-crawler/util"
+	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -37,6 +42,7 @@ type RegistryItem struct {
 	RoomInfo          common.RoomInfo
 	PlayDeque         *common.PlayDeque
 	Statistics        common.LiveStatisticsStruct
+	RuleRegistry      common.RuleResponse
 	//Client            server.LocalClient
 	//PlatformConnectorStrategy platform.IPlatformConnectorStrategy
 }
@@ -56,6 +62,47 @@ func (r *EventDataRegistry) MarkReady(
 		Statistics:   common.InitStatisticStruct(),
 		PlayDeque:    common.NewFixedSizeDeque(1024),
 	}
+}
+
+func (r *EventDataRegistry) LoadRule(client *websocket.Conn) constant.ResponseStatus {
+	r.m.Lock()
+	defer r.m.Unlock()
+	item := r.registryItems[client]
+
+	servicePart := item.StartRequest.Service
+	if servicePart.ApiBaseURL == "" {
+		return constant.LOAD_RULE_FAIL
+	}
+
+	params := url.Values{}
+	params.Set("projectId", strconv.Itoa(servicePart.ProjectId))
+	params.Set("ruleType", "1")
+	loadRuleUrl := strings.Join([]string{servicePart.ApiBaseURL, "/", constant.LoadGuideRuleURI, "?", params.Encode()}, "")
+
+	req, err := http.NewRequest("GET", loadRuleUrl, nil)
+	if err != nil {
+		return constant.LOAD_RULE_FAIL
+	}
+	// Set custom headers
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", servicePart.Authorization)
+
+	httpClient := &http.Client{}
+	response, err := httpClient.Do(req)
+	bodyBytes, err := io.ReadAll(response.Body)
+	defer response.Body.Close()
+	body := string(bodyBytes)
+
+	if err != nil || response.StatusCode != 200 {
+		return constant.LOAD_RULE_FAIL
+	}
+
+	var ruleResponse common.RuleResponse
+	logger.Infof("LoadRule result is: %s", body)
+	err = json.Unmarshal(bodyBytes, &ruleResponse)
+	item.RuleRegistry = ruleResponse
+
+	return constant.SUCCESS
 }
 
 func (r *EventDataRegistry) RemoveClient(client *websocket.Conn) {

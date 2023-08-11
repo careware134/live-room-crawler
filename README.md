@@ -42,8 +42,13 @@ https://odd-card-01e.notion.site/web-socket-86f57165e3cd4ca09aaf056ec54ea414
    {
       "type": "start",
       "target": {
-         "live_url" : "https://live.douyin.com/680726409770",
+         "live_url" : "https://live.douyin.com/486301503679",
          "platform": "douyin"
+      },
+      "service": {
+          "api_base_url": "https://aigc-video-dev.softsugar.com/aigc/live/live-api-dev",
+          "project_id": 1351,
+          "authorization": "eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiIwOTI0ZjJjOC0xZjc4LTQyMjgtYmQyYy0zNmQxMjA1MDg5NGIiLCJPcmlnaW5hbFNvdXJjZSI6IlBDX0xJVkUiLCJzdWIiOiI2NDMyMTg1OTUiLCJleHAiOjE2OTQzNTE0NDN9.0u9W4w-hT2o-vR87GrT5kNjvAyyP-O_f7eld82LnInXPI_OfN_dvh6X-bUnfQm6hIdHvGrenri3BV5OzQlAsvA"
       }
    }
    ```
