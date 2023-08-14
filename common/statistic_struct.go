@@ -9,7 +9,7 @@ type CounterType string
 
 const (
 	ONLINE  CounterType = "online"
-	LIKE    CounterType = "enter"
+	LIKE    CounterType = "like"
 	GIFT    CounterType = "gift"
 	FOLLOW  CounterType = "follow"
 	VIEW    CounterType = "view"
@@ -54,33 +54,24 @@ func (event *UserActionEvent) ToPlayMessage() *CommandResponse {
 }
 
 type StatisticCounter struct {
-	Count    uint64 `json:"count,omitempty"`
-	Incr     bool   `json:"incr,omitempty"`
-	LastPush int    `json:"lastPush,omitempty"`
+	Count     uint64 `json:"count,omitempty"`
+	Incr      bool   `json:"incr,omitempty"`
+	LastMatch int    `json:"lastPush,omitempty"`
 }
 
-func BuildStatisticsCounter(count uint64, incr bool) StatisticCounter {
-	return StatisticCounter{
-		Count:    count,
-		LastPush: 0,
-		Incr:     incr,
+func BuildStatisticsCounter(count uint64, incr bool) *StatisticCounter {
+	return &StatisticCounter{
+		Count:     count,
+		LastMatch: 0,
+		Incr:      incr,
 	}
-}
-
-func AddStatisticsCounter(base *StatisticCounter, count uint64) StatisticCounter {
-	if base != nil {
-		base.Count += count
-		return *base
-	}
-
-	return BuildStatisticsCounter(count, true)
 }
 
 func (c *StatisticCounter) AddCounter(count uint64) {
 	c.Count += count
 }
 
-func (c *StatisticCounter) Add(other StatisticCounter) {
+func (c *StatisticCounter) Add(other *StatisticCounter) {
 	if other.Incr {
 		c.Count += other.Count
 	} else {
@@ -89,43 +80,14 @@ func (c *StatisticCounter) Add(other StatisticCounter) {
 
 }
 
-func InitStatisticStruct() LiveStatisticsStruct {
-	return LiveStatisticsStruct{
-		Online:  BuildStatisticsCounter(0, false),
-		Like:    BuildStatisticsCounter(0, false),
-		Gift:    BuildStatisticsCounter(0, false),
-		Follow:  BuildStatisticsCounter(0, false),
-		View:    BuildStatisticsCounter(0, false),
-		Comment: BuildStatisticsCounter(0, false),
-	}
-}
+func InitStatisticStruct() map[CounterType]*StatisticCounter {
+	registry := make(map[CounterType]*StatisticCounter)
+	registry[ONLINE] = BuildStatisticsCounter(0, false)
+	registry[LIKE] = BuildStatisticsCounter(0, false)
+	registry[GIFT] = BuildStatisticsCounter(0, false)
+	registry[FOLLOW] = BuildStatisticsCounter(0, false)
+	registry[VIEW] = BuildStatisticsCounter(0, false)
+	registry[COMMENT] = BuildStatisticsCounter(0, false)
+	return registry
 
-func (s *LiveStatisticsStruct) Add(other LiveStatisticsStruct) {
-	s.Online.Add(other.Online)
-	s.Like.Add(other.Like)
-	s.Gift.Add(other.Gift)
-	s.Follow.Add(other.Follow)
-	s.View.Add(other.View)
-	s.Comment.Add(other.Comment)
-}
-
-func (s *LiveStatisticsStruct) AddCounter(counterType CounterType, other StatisticCounter) {
-	if counterType == ONLINE {
-		s.Online.Add(other)
-	}
-	if counterType == LIKE {
-		s.Like.Add(other)
-	}
-	if counterType == GIFT {
-		s.Gift.Add(other)
-	}
-	if counterType == FOLLOW {
-		s.Follow.Add(other)
-	}
-	if counterType == VIEW {
-		s.View.Add(other)
-	}
-	if counterType == COMMENT {
-		s.Comment.Add(other)
-	}
 }

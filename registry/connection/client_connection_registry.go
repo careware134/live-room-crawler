@@ -15,7 +15,6 @@ var (
 	logger   = util.Logger()
 	instance *ClientConnectionRegistry
 	once     sync.Once
-	stopOnce sync.Once
 )
 
 type ClientConnectionRegistry struct {

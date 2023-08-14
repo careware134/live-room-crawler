@@ -1,6 +1,8 @@
 package common
 
-import "live-room-crawler/constant"
+import (
+	"live-room-crawler/constant"
+)
 
 type CommandType string
 
@@ -27,6 +29,20 @@ const (
 	TEXT  DrivenType = "text"
 	AUDIO DrivenType = "audio"
 )
+
+var drivenTypeMap = map[int]DrivenType{
+	1: TEXT,
+	2: AUDIO,
+}
+
+func GetDrivenTypeByCode(index int) DrivenType {
+	drivenType, ok := drivenTypeMap[index]
+	if ok {
+		return drivenType
+	}
+
+	return TEXT
+}
 
 type Platform string
 
@@ -74,7 +90,7 @@ type RuleMeta struct {
 	Id        int64    `json:"id,omitempty"`
 	Name      string   `json:"name,omitempty"`
 	Type      RuleType `json:"type,omitempty"`
-	Threshold int32    `json:"threshold,omitempty"`
+	Threshold int      `json:"threshold,omitempty"`
 	Enable    bool     `json:"enable,omitempty"`
 }
 

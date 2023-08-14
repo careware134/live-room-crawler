@@ -8,6 +8,7 @@ import (
 	"live-room-crawler/constant"
 	"live-room-crawler/platform"
 	"live-room-crawler/registry/data"
+	"sync"
 
 	//"live-room-crawler/registry/connection"
 	"live-room-crawler/util"
@@ -20,6 +21,7 @@ type LocalClient struct {
 	Conn      *websocket.Conn
 	Start     bool
 	Stop      bool
+	stopOnce  sync.Once
 	stopChan  chan struct{} // Channel to signal stop
 }
 
@@ -134,14 +136,15 @@ func (client *LocalClient) onStart(request *common.CommandRequest) *common.Comma
 	logger1.Infof("🌏onStart with request: %s", marshal)
 
 	response := &common.CommandResponse{
-		CommandType: common.START,
-		TraceId:     request.TraceId,
+		CommandType:    common.START,
+		TraceId:        request.TraceId,
+		ResponseStatus: constant.SUCCESS,
 	}
 
 	// create connector by start request
 	connector := platform.NewConnector(request.Target, client.stopChan)
 	client.Connector = &connector
-	// invoke connect
+	// 0. invoke connect to prepare listen
 	responseStatus := connector.Connect(client.Conn)
 	if !responseStatus.Success {
 		response.ResponseStatus = responseStatus
@@ -150,17 +153,18 @@ func (client *LocalClient) onStart(request *common.CommandRequest) *common.Comma
 
 	// .1 then start mark ready
 	GetClientRegistry().MarkReady(client.Conn, request, client)
+
 	// .2 if connect success, then load rule
 	responseStatus = data.GetDataRegistry().LoadRule(client.Conn)
 	if !responseStatus.Success {
 		response.ResponseStatus = responseStatus
 		return response
 	}
-
-	// .3 start listen
+	// .3 start listen connector
 	go connector.StartListen(client.Conn)
 	// .4 mark connection start
 	client.Start = true
+	client.Stop = false
 
 	marshal, _ = json.Marshal(response)
 	logger1.Infof("🌏onStart with response: %s", marshal)
@@ -172,12 +176,21 @@ func (client *LocalClient) onLoad(request *common.CommandRequest) *common.Comman
 	marshal, _ := json.Marshal(request)
 	logger1.Infof("🌏onLoad with request: %s", marshal)
 
+	responseStatus := constant.SUCCESS
+
 	response := &common.CommandResponse{
-		CommandType: common.LOAD,
-		TraceId:     request.TraceId,
+		CommandType:    common.LOAD,
+		TraceId:        request.TraceId,
+		ResponseStatus: responseStatus,
 	}
 
-	response.ResponseStatus = constant.SUCCESS
+	// .2 if connect success, then load rule
+	responseStatus = data.GetDataRegistry().LoadRule(client.Conn)
+	if !responseStatus.Success {
+		response.ResponseStatus = responseStatus
+		return response
+	}
+
 	marshal, _ = json.Marshal(response)
 	logger1.Infof("🌏onLoad with response: %s", marshal)
 
@@ -200,7 +213,7 @@ func (client *LocalClient) onStop(request *common.CommandRequest) *common.Comman
 		},
 	}
 
-	stopOnce.Do(func() {
+	client.stopOnce.Do(func() {
 		client.privateTryStop(response)
 	})
 
@@ -219,7 +232,7 @@ func (client *LocalClient) TryRevoke() *common.CommandResponse {
 	marshal, _ := json.Marshal(response)
 	logger1.Infof("🌏TryRevoke with response: %s", marshal)
 
-	stopOnce.Do(func() {
+	client.stopOnce.Do(func() {
 		client.privateTryStop(response)
 	})
 

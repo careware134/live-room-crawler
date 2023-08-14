@@ -3,12 +3,12 @@ package common
 import "live-room-crawler/constant"
 
 type RuleResponse struct {
-	DataList       []Data                   `json:"dataList"`
+	DataList       []RuleGroupItem          `json:"dataList"`
 	ResponseStatus *constant.ResponseStatus `json:"responseStatus,omitempty"`
 	Count          int                      `json:"count,omitempty"`
 }
 
-type Data struct {
+type RuleGroupItem struct {
 	RuleList                []Rule     `json:"ruleList"`
 	Count                   int        `json:"count,omitempty"`
 	ConditionTypeDictionary *Condition `json:"conditionTypeDictionary,omitempty"`
