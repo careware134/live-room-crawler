@@ -158,6 +158,7 @@ func (client *LocalClient) onStart(request *common.CommandRequest) *common.Comma
 	responseStatus = data.GetDataRegistry().LoadRule(client.Conn)
 	if !responseStatus.Success {
 		response.ResponseStatus = responseStatus
+		GetClientRegistry().RemoveClient(client.Conn, false)
 		return response
 	}
 	// .3 start listen connector

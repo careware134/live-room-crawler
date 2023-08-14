@@ -176,6 +176,7 @@ func requestGetRule(servicePart common.ServiceStruct) (constant.ResponseStatus, 
 	// Set custom headers
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", servicePart.Authorization)
+	req.Header.Set("TenantId", servicePart.TenantId)
 
 	httpClient := &http.Client{}
 	response, err := httpClient.Do(req)
