@@ -14,7 +14,7 @@ type IPlatformConnectorStrategy interface {
 
 	StartListen(localConn *websocket.Conn)
 
-	Stop(signalClient bool)
+	Stop()
 
 	IsAlive() bool
 }

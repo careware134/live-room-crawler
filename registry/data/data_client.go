@@ -108,7 +108,6 @@ func (item *RegistryItem) UpdateStatistics(
 	marshal, _ := json.Marshal(counter)
 
 	if item != nil {
-
 		playResponse := item.CompareRule(counterType, counter)
 		if playResponse != nil {
 			item.WriteResponse(playResponse)
@@ -166,7 +165,7 @@ func requestGetRule(servicePart common.ServiceStruct) (constant.ResponseStatus, 
 	}
 
 	params := url.Values{}
-	params.Set("projectId", strconv.Itoa(servicePart.ProjectId))
+	params.Set("projectId", servicePart.ProjectId)
 	loadRuleUrl := strings.Join([]string{servicePart.ApiBaseURL, "/", constant.LoadGuideRuleURI, "?", params.Encode()}, "")
 
 	req, err := http.NewRequest("GET", loadRuleUrl, nil)

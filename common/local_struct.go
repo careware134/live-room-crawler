@@ -61,7 +61,7 @@ type CommandRequest struct {
 
 type ServiceStruct struct {
 	ApiBaseURL    string `json:"api_base_url"`
-	ProjectId     int    `json:"project_id"`
+	ProjectId     string `json:"project_id"`
 	TenantId      string `json:"tenant_id"`
 	Authorization string `json:"authorization"`
 }

@@ -1,7 +1,7 @@
 package constant
 
 type ResponseStatus struct {
-	Success bool   `json:"success,omitempty"`
+	Success bool   `json:"success"`
 	Code    string `json:"code,omitempty"`
 	Message string `json:"message,omitempty"`
 }

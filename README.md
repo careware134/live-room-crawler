@@ -64,9 +64,16 @@ https://odd-card-01e.notion.site/web-socket-86f57165e3cd4ca09aaf056ec54ea414
       },
       "service": {
           "api_base_url": "https://aigc-video-dev.softsugar.com/aigc/live/live-api-dev",
-          "project_id": 1317,
+          "project_id": "1317",
           "tenant_id": "1673151231108915200",
           "authorization": "eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiJkZTgyOGJjYi0xM2U2LTRkYjgtYjNiMC00NTRhMDg0YjA0YzMiLCJPcmlnaW5hbFNvdXJjZSI6IlBDX0xJVkUiLCJzdWIiOiI2NDMyMTg1ODkiLCJleHAiOjE2OTQ1ODk0MjB9.0wYdi04d_owY7IQFNbBAYcfpEbFi_KSgIurgRi6Bikb4Xhsy7uaFG6eTicU1N7uxmPHldcwlFkmi_bSmLFE9xw"
       }
+   }
+   ```
+
+```json
+   {
+      "type": "stop",
+      "trace_id": "xx"
    }
    ```

@@ -19,16 +19,17 @@ var (
 )
 
 type ConnectorStrategy struct {
-	liveUrl  string
-	RoomInfo *common.RoomInfo
-	conn     *websocket.Conn
-	IsStart  bool
-	IsStop   bool
-	stopChan chan struct{}
+	liveUrl   string
+	RoomInfo  *common.RoomInfo
+	conn      *websocket.Conn
+	localConn *websocket.Conn
+	IsStart   bool
+	IsStop    bool
+	stopChan  chan struct{}
 }
 
 func NewInstance(liveUrl string, stopChan chan struct{}) *ConnectorStrategy {
-	logger.Infof("♪ NewInstance for url: %s", liveUrl)
+	logger.Infof("♪ [douyin.ConnectorStrategy] NewInstance for url: %s", liveUrl)
 	return &ConnectorStrategy{
 		liveUrl:  liveUrl,
 		stopChan: stopChan,
@@ -38,7 +39,7 @@ func NewInstance(liveUrl string, stopChan chan struct{}) *ConnectorStrategy {
 func (c *ConnectorStrategy) Connect(localConn *websocket.Conn) constant.ResponseStatus {
 	roomInfo := c.GetRoomInfo()
 	if roomInfo == nil {
-		logger.Infof("♪ Start douyin fail for url: %s", c.liveUrl)
+		logger.Infof("♪ [douyin.ConnectorStrategy] Start douyin fail for url: %s", c.liveUrl)
 		return constant.INVALID_LIVE_URL
 	}
 
@@ -50,10 +51,10 @@ func (c *ConnectorStrategy) Connect(localConn *websocket.Conn) constant.Response
 
 	conn, _, err := websocket.DefaultDialer.Dial(websocketUrl, header)
 	c.conn = conn
-	logger.Infof("♪ Start douyin success for url: %s title: %s", c.liveUrl, c.RoomInfo.RoomTitle)
+	logger.Infof("♪ [douyin.ConnectorStrategy] Start douyin success for url: %s title: %s", c.liveUrl, c.RoomInfo.RoomTitle)
 
 	if err != nil {
-		logger.Fatalf("fatal to dial websocket! url: %s error:%e", websocketUrl, err)
+		logger.Errorf(" [douyin.ConnectorStrategy] fail to dial websocket! url: %s error:%e", websocketUrl, err)
 		return constant.CONNECTION_FAIL
 	}
 	return constant.SUCCESS
@@ -68,12 +69,12 @@ func (c *ConnectorStrategy) StartListen(localConn *websocket.Conn) {
 		select {
 		case <-c.stopChan:
 			// Stop signal received, exit the goroutine
-			logger.Infof("⏹♪ StartListen breaked by c.stopChan")
+			logger.Infof("♪ ⚓️[douyin.ConnectorStrategy] StartListen BREAKED by c.stopChan")
 			return
 		default:
 			if err != nil {
 				logger.Errorf("StartListen fail with reason: %e", err)
-				c.Stop(true)
+				c.Stop()
 				return
 			}
 			c.OnMessage(message, c.conn, localConn)
@@ -81,14 +82,11 @@ func (c *ConnectorStrategy) StartListen(localConn *websocket.Conn) {
 	}
 }
 
-func (c *ConnectorStrategy) Stop(signalClient bool) {
-	if !c.IsStop && signalClient {
-		close(c.stopChan)
-	}
+func (c *ConnectorStrategy) Stop() {
 	c.IsStart = false
 	c.IsStop = true
 	c.conn.Close()
-	logger.Infof("♪ Stop douyin for url: %s titl: %s", c.liveUrl, c.RoomInfo.RoomTitle)
+	logger.Infof("♪[douyin.ConnectorStrategy] Stop douyin for url: %s titl: %s", c.liveUrl, c.RoomInfo.RoomTitle)
 }
 
 func (c *ConnectorStrategy) IsAlive() bool {

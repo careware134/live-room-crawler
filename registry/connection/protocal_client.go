@@ -48,7 +48,7 @@ func (client *LocalClient) StartListenConnection(conn *websocket.Conn) {
 		select {
 		case <-client.stopChan:
 			// Stop signal received, exit the goroutine
-			logger.Infof("[LocalClient]⏹break StartListenConnection by client.stopChan for client: %s", conn.RemoteAddr())
+			logger.Infof("[LocalClient]⚓️break StartListenConnection by client.stopChan for client: %s", conn.RemoteAddr())
 			return
 		default:
 			client.privateStartListen(clientRegistry, dataRegistry)
@@ -202,20 +202,15 @@ func (client *LocalClient) onStop(request *common.CommandRequest) *common.Comman
 	marshal, _ := json.Marshal(request)
 	logger1.Infof("🌏onStop with request: %s", marshal)
 
-	TraceId := request.TraceId
-	Message := constant.SUCCESS.Message
-
 	response := &common.CommandResponse{
-		CommandType: common.STOP,
-		TraceId:     TraceId,
-		ResponseStatus: constant.ResponseStatus{
-			Success: true,
-			Message: Message,
-		},
+		CommandType:    common.STOP,
+		TraceId:        request.TraceId,
+		ResponseStatus: constant.SUCCESS,
 	}
 
 	client.stopOnce.Do(func() {
 		client.privateTryStop(response)
+		GetClientRegistry().RemoveClient(client.Conn, false)
 	})
 
 	marshal, _ = json.Marshal(response)
@@ -251,7 +246,7 @@ func (client *LocalClient) privateTryStop(response *common.CommandResponse) {
 	}
 
 	if client.Connector != nil {
-		(*client.Connector).Stop(false)
+		(*client.Connector).Stop()
 	}
 	logger.Infof("privateTryStop with client:%s", client.Conn.RemoteAddr())
 }

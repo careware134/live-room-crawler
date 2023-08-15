@@ -71,7 +71,7 @@ func (r *ClientConnectionRegistry) UpdateHeartBeat(client *websocket.Conn) {
 func (r *ClientConnectionRegistry) RemoveClient(client *websocket.Conn, tryRevoke bool) {
 	r.m.Lock()
 	defer r.m.Unlock()
-	logger.Info("✂️RemoveClient invoked connection addr:", client.RemoteAddr())
+	logger.Info("✂️[ClientConnectionRegistry]RemoveClient invoked connection addr:", client.RemoteAddr())
 	delete(r.clients, client)
 	localClient := r.readyLocalClients[client]
 	if tryRevoke && localClient != nil {
