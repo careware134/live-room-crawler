@@ -5,8 +5,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"io"
-	"live-room-crawler/common"
 	"live-room-crawler/constant"
+	"live-room-crawler/domain"
+	"live-room-crawler/util"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -21,14 +22,14 @@ type RegistryItem struct {
 	countLock         sync.Mutex
 	conn              *websocket.Conn
 	lostHeatBeatStamp int64
-	StartRequest      common.CommandRequest
-	RoomInfo          common.RoomInfo
-	PlayDeque         *common.PlayDeque
-	Statistics        map[common.CounterType]*common.StatisticCounter
-	RuleGroupList     map[common.CounterType][]common.Rule
+	StartRequest      domain.CommandRequest
+	RoomInfo          domain.RoomInfo
+	PlayDeque         *util.PlayDeque
+	Statistics        map[domain.CounterType]*domain.StatisticCounter
+	RuleGroupList     map[domain.CounterType][]domain.Rule
 }
 
-func (item *RegistryItem) CompareRule(counterType common.CounterType, counter *common.StatisticCounter) *common.CommandResponse {
+func (item *RegistryItem) CompareRule(counterType domain.CounterType, counter *domain.StatisticCounter) *domain.CommandResponse {
 	value, ok := item.Statistics[counterType]
 	if ok {
 		value.Add(counter)
@@ -50,22 +51,22 @@ func (item *RegistryItem) CompareRule(counterType common.CounterType, counter *c
 			randomIndex := rand.Intn(len(rule.AnswerList))
 
 			answer := rule.AnswerList[randomIndex]
-			content := common.PlayContent{
-				DrivenType: common.GetDrivenTypeByCode(rule.DriverType),
+			content := domain.PlayContent{
+				DrivenType: domain.GetDrivenTypeByCode(rule.DriverType),
 				Audio:      answer.AudioUrl,
 				Text:       answer.Text,
 			}
 
-			response := common.CommandResponse{
-				CommandType:    common.PLAY,
+			response := domain.CommandResponse{
+				CommandType:    domain.PLAY,
 				TraceId:        uuid.NewString(),
 				ResponseStatus: constant.SUCCESS,
 				Content:        content,
-				RuleMeta: common.RuleMeta{
+				RuleMeta: domain.RuleMeta{
 					Id:        int64(idInt),
 					Name:      rule.Name,
 					Threshold: rule.Threshold,
-					Type:      common.GUIDE,
+					Type:      domain.GUIDE,
 				},
 			}
 
@@ -88,21 +89,25 @@ func (item *RegistryItem) LoadRule() constant.ResponseStatus {
 		return responseStatus
 	}
 
+	if ruleResponse.DataList != nil && len(ruleResponse.DataList) > 0 {
+		item.RuleGroupList = make(map[domain.CounterType][]domain.Rule)
+	}
 	ruleRegistry := item.RuleGroupList
 	for _, groupItem := range ruleResponse.DataList {
 		dictionary := groupItem.ConditionTypeDictionary
 		sort.Slice(groupItem.RuleList, func(i, j int) bool {
-			return groupItem.RuleList[i].Threshold < groupItem.RuleList[j].Threshold
+			return groupItem.RuleList[i].Threshold > groupItem.RuleList[j].Threshold &&
+				groupItem.RuleList[i].DriverType > groupItem.RuleList[j].DriverType
 		})
-		ruleRegistry[common.CounterType(dictionary.Name)] = groupItem.RuleList
+		ruleRegistry[domain.CounterType(dictionary.Name)] = groupItem.RuleList
 	}
 
 	return constant.SUCCESS
 }
 
 func (item *RegistryItem) UpdateStatistics(
-	counterType common.CounterType,
-	counter *common.StatisticCounter) {
+	counterType domain.CounterType,
+	counter *domain.StatisticCounter) {
 	item.countLock.Lock()
 	defer item.countLock.Unlock()
 	marshal, _ := json.Marshal(counter)
@@ -120,7 +125,7 @@ func (item *RegistryItem) UpdateStatistics(
 	}
 }
 
-func (item *RegistryItem) EnqueueAction(actionEvent common.UserActionEvent) {
+func (item *RegistryItem) EnqueueAction(actionEvent domain.UserActionEvent) {
 	item.writeLock.Lock()
 	defer item.writeLock.Unlock()
 	marshal, _ := json.Marshal(actionEvent)
@@ -131,7 +136,7 @@ func (item *RegistryItem) EnqueueAction(actionEvent common.UserActionEvent) {
 	}
 }
 
-func (item *RegistryItem) DequeueAction() *common.UserActionEvent {
+func (item *RegistryItem) DequeueAction() *domain.UserActionEvent {
 	item.writeLock.Lock()
 	defer item.writeLock.Unlock()
 
@@ -142,14 +147,14 @@ func (item *RegistryItem) DequeueAction() *common.UserActionEvent {
 	return front
 }
 
-func (item *RegistryItem) WriteResponse(response *common.CommandResponse) error {
+func (item *RegistryItem) WriteResponse(response *domain.CommandResponse) error {
 	item.writeLock.Lock()
 	defer item.writeLock.Unlock()
 	marshal, err := json.Marshal(response)
 	if err != nil {
 		return err
 	}
-	if response.CommandType == common.PING {
+	if response.CommandType == domain.PING {
 		err := item.conn.WriteMessage(websocket.PongMessage, nil)
 		return err
 	} else {
@@ -159,7 +164,7 @@ func (item *RegistryItem) WriteResponse(response *common.CommandResponse) error 
 	}
 }
 
-func requestGetRule(servicePart common.ServiceStruct) (constant.ResponseStatus, *common.RuleResponse) {
+func requestGetRule(servicePart domain.ServiceStruct) (constant.ResponseStatus, *domain.RuleResponse) {
 	if servicePart.ApiBaseURL == "" {
 		return constant.LOAD_RULE_FAIL, nil
 	}
@@ -183,12 +188,17 @@ func requestGetRule(servicePart common.ServiceStruct) (constant.ResponseStatus, 
 	defer response.Body.Close()
 	body := string(bodyBytes)
 
+	logger.Infof("LoadRule request url:%s with code %d result is: %s", loadRuleUrl, response.StatusCode, body)
 	if err != nil || response.StatusCode != 200 {
 		return constant.LOAD_RULE_FAIL, nil
 	}
 
-	var ruleResponse common.RuleResponse
+	var ruleResponse domain.RuleResponse
 	logger.Infof("LoadRule result is: %s", body)
 	err = json.Unmarshal(bodyBytes, &ruleResponse)
+	if err != nil || ruleResponse.ResponseStatus == nil {
+		return constant.LOAD_RULE_FAIL, nil
+	}
+
 	return constant.SUCCESS, &ruleResponse
 }

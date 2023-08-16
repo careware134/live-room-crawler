@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gorilla/websocket"
-	"live-room-crawler/common"
 	"live-room-crawler/constant"
+	"live-room-crawler/domain"
 	"live-room-crawler/util"
 	"sync"
 	"time"
@@ -34,8 +34,8 @@ func GetDataRegistry() *EventDataRegistry {
 
 func (r *EventDataRegistry) MarkReady(
 	client *websocket.Conn,
-	startRequest *common.CommandRequest,
-	roomInfo *common.RoomInfo) {
+	startRequest *domain.CommandRequest,
+	roomInfo *domain.RoomInfo) {
 	r.m.Lock()
 	defer r.m.Unlock()
 	marshal, _ := json.Marshal(roomInfo)
@@ -45,10 +45,17 @@ func (r *EventDataRegistry) MarkReady(
 		conn:          client,
 		StartRequest:  *startRequest,
 		RoomInfo:      *roomInfo,
-		Statistics:    common.InitStatisticStruct(),
-		PlayDeque:     common.NewFixedSizeDeque(1024),
-		RuleGroupList: make(map[common.CounterType][]common.Rule),
+		Statistics:    domain.InitStatisticStruct(),
+		PlayDeque:     util.NewFixedSizeDeque(1024),
+		RuleGroupList: make(map[domain.CounterType][]domain.Rule),
 	}
+}
+
+func (r *EventDataRegistry) IsReady(client *websocket.Conn) bool {
+	r.m.Lock()
+	defer r.m.Unlock()
+	_, ok := r.registryItems[client]
+	return ok
 }
 
 func (r *EventDataRegistry) RemoveClient(client *websocket.Conn) {
@@ -105,19 +112,19 @@ func (r *EventDataRegistry) LoadRule(client *websocket.Conn) constant.ResponseSt
 	return item.LoadRule()
 }
 
-func (r *EventDataRegistry) WriteResponse(client *websocket.Conn, message *common.CommandResponse) error {
+func (r *EventDataRegistry) WriteResponse(client *websocket.Conn, commandResponse *domain.CommandResponse) error {
 	item := r.registryItems[client]
 	if item == nil {
-		message.ResponseStatus = constant.CLIENT_NOT_READY
-		marshal, _ := json.Marshal(message)
+		//commandResponse.ResponseStatus = constant.CLIENT_NOT_READY
+		marshal, _ := json.Marshal(commandResponse)
 		client.WriteMessage(websocket.TextMessage, marshal)
 		return errors.New(constant.CLIENT_NOT_READY.Message)
 	}
-	item.WriteResponse(message)
+	item.WriteResponse(commandResponse)
 	return nil
 }
 
-func (r *EventDataRegistry) UpdateStatistics(conn *websocket.Conn, counterType common.CounterType, counter *common.StatisticCounter) error {
+func (r *EventDataRegistry) UpdateStatistics(conn *websocket.Conn, counterType domain.CounterType, counter *domain.StatisticCounter) error {
 	item := r.registryItems[conn]
 	if item == nil {
 		return errors.New(constant.CLIENT_NOT_READY.Message)
@@ -127,7 +134,7 @@ func (r *EventDataRegistry) UpdateStatistics(conn *websocket.Conn, counterType c
 	return nil
 }
 
-func (r *EventDataRegistry) EnqueueAction(conn *websocket.Conn, event common.UserActionEvent) error {
+func (r *EventDataRegistry) EnqueueAction(conn *websocket.Conn, event domain.UserActionEvent) error {
 	item := r.registryItems[conn]
 	if item == nil {
 		return errors.New(constant.CLIENT_NOT_READY.Message)

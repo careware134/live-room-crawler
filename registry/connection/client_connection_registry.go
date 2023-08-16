@@ -3,8 +3,8 @@ package connection
 import (
 	"encoding/json"
 	"github.com/gorilla/websocket"
-	"live-room-crawler/common"
 	"live-room-crawler/constant"
+	"live-room-crawler/domain"
 	"live-room-crawler/registry/data"
 	"live-room-crawler/util"
 	"sync"
@@ -47,7 +47,7 @@ func (r *ClientConnectionRegistry) AddClient(client *websocket.Conn) {
 
 func (r *ClientConnectionRegistry) MarkReady(
 	client *websocket.Conn,
-	startRequest *common.CommandRequest,
+	startRequest *domain.CommandRequest,
 	localClient *LocalClient) {
 	r.m.Lock()
 	defer r.m.Unlock()

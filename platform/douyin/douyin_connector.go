@@ -5,8 +5,8 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/spyzhov/ajson"
 	"io"
-	"live-room-crawler/common"
 	"live-room-crawler/constant"
+	"live-room-crawler/domain"
 	"live-room-crawler/util"
 	"net/http"
 	"net/url"
@@ -20,7 +20,7 @@ var (
 
 type ConnectorStrategy struct {
 	liveUrl   string
-	RoomInfo  *common.RoomInfo
+	RoomInfo  *domain.RoomInfo
 	conn      *websocket.Conn
 	localConn *websocket.Conn
 	IsStart   bool
@@ -43,10 +43,10 @@ func (c *ConnectorStrategy) Connect(localConn *websocket.Conn) constant.Response
 		return constant.INVALID_LIVE_URL
 	}
 
-	websocketUrl := strings.ReplaceAll(util.WebSocketTemplateURL, util.RoomIdPlaceHolder, roomInfo.RoomId)
+	websocketUrl := strings.ReplaceAll(WebSocketTemplateURL, RoomIdPlaceHolder, roomInfo.RoomId)
 	header := http.Header{
 		"cookie":     []string{"ttwid=" + roomInfo.Ttwid},
-		"User-Agent": []string{util.SimulateUserAgent},
+		"User-Agent": []string{SimulateUserAgent},
 	}
 
 	conn, _, err := websocket.DefaultDialer.Dial(websocketUrl, header)
@@ -69,11 +69,11 @@ func (c *ConnectorStrategy) StartListen(localConn *websocket.Conn) {
 		select {
 		case <-c.stopChan:
 			// Stop signal received, exit the goroutine
-			logger.Infof("♪ ⚓️[douyin.ConnectorStrategy] StartListen BREAKED by c.stopChan")
+			logger.Infof("⚓️♪ [douyin.ConnectorStrategy] StartListen BREAKED by c.stopChan")
 			return
 		default:
 			if err != nil {
-				logger.Errorf("StartListen fail with reason: %e", err)
+				logger.Errorf("[douyin.ConnectorStrategy] StartListen fail with reason: %e", err)
 				c.Stop()
 				return
 			}
@@ -93,14 +93,14 @@ func (c *ConnectorStrategy) IsAlive() bool {
 	return c.IsStop
 }
 
-func (c *ConnectorStrategy) GetRoomInfo() *common.RoomInfo {
+func (c *ConnectorStrategy) GetRoomInfo() *domain.RoomInfo {
 	if c.RoomInfo != nil {
 		return c.RoomInfo
 	}
 	return c.getRoomInfoByRequest()
 }
 
-func (c *ConnectorStrategy) getRoomInfoByRequest() *common.RoomInfo {
+func (c *ConnectorStrategy) getRoomInfoByRequest() *domain.RoomInfo {
 	// request room liveUrl
 	req, err := http.NewRequest("GET", c.liveUrl, nil)
 	if err != nil {
@@ -179,8 +179,8 @@ func (c *ConnectorStrategy) getRoomInfoByRequest() *common.RoomInfo {
 		}
 	}
 
-	logger.Infof("♪ GetRoomInfo for RoomId: %s title: %s ttwid: %s", liveRoomId, liveRoomTitle, ttwid)
-	c.RoomInfo = &common.RoomInfo{
+	logger.Infof("♪  [douyin.ConnectorStrategy] GetRoomInfo for RoomId: %s title: %s ttwid: %s", liveRoomId, liveRoomTitle, ttwid)
+	c.RoomInfo = &domain.RoomInfo{
 		RoomId:    liveRoomId,
 		RoomTitle: liveRoomTitle,
 		Ttwid:     ttwid,

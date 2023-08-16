@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"live-room-crawler/common"
+	"live-room-crawler/domain"
 	"live-room-crawler/platform"
 	"live-room-crawler/server"
 	"live-room-crawler/util"
@@ -57,8 +57,8 @@ func main() {
 
 	if cliMode {
 		logger.Infof("ready to crawl platform:%s url:%s ", platformName, liveUrl)
-		platformConnector := platform.NewConnector(common.TargetStruct{
-			Platform: common.Platform(platformName),
+		platformConnector := platform.NewConnector(domain.TargetStruct{
+			Platform: domain.Platform(platformName),
 			LiveURL:  liveUrl,
 		}, make(chan struct{}))
 

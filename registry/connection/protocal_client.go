@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"live-room-crawler/common"
 	"live-room-crawler/constant"
+	"live-room-crawler/domain"
 	"live-room-crawler/platform"
 	"live-room-crawler/registry/data"
 	"sync"
@@ -48,7 +48,7 @@ func (client *LocalClient) StartListenConnection(conn *websocket.Conn) {
 		select {
 		case <-client.stopChan:
 			// Stop signal received, exit the goroutine
-			logger.Infof("[LocalClient]⚓️break StartListenConnection by client.stopChan for client: %s", conn.RemoteAddr())
+			logger.Infof("⚓️[LocalClient]break StartListenConnection by client.stopChan for client: %s", conn.RemoteAddr())
 			return
 		default:
 			client.privateStartListen(clientRegistry, dataRegistry)
@@ -69,7 +69,7 @@ func (client *LocalClient) privateStartListen(clientRegistry *ClientConnectionRe
 	if messageType == websocket.TextMessage {
 		// response to the connection
 		response := client.OnCommand(message)
-		if response.CommandType == common.STOP && response.ResponseStatus.Success {
+		if response.CommandType == domain.STOP && response.ResponseStatus.Success {
 			logger.Warnf("[LocalClient]🪝StartListenConnection Break by stop request: %s", message)
 			client.TryRevoke()
 			return
@@ -85,26 +85,26 @@ func (client *LocalClient) privateStartListen(clientRegistry *ClientConnectionRe
 }
 
 func (client *LocalClient) OnCommand(
-	message []byte) *common.CommandResponse {
+	message []byte) *domain.CommandResponse {
 
 	logger1.Infof("[🛎📩LocalClient]OnCommand request is: %s", string(message))
-	request := &common.CommandRequest{}
+	request := &domain.CommandRequest{}
 	json.Unmarshal(message, request)
 
-	response := &common.CommandResponse{
+	response := &domain.CommandResponse{
 		CommandType: request.CommandType,
 	}
 	switch request.CommandType {
-	case common.START:
+	case domain.START:
 		response = client.onStart(request)
-	case common.LOAD:
+	case domain.LOAD:
 		response = client.onLoad(request)
-	case common.STOP:
+	case domain.STOP:
 		response = client.onStop(request)
-	case common.PING:
+	case domain.PING:
 		GetClientRegistry().UpdateHeartBeat(client.Conn)
-		response = &common.CommandResponse{
-			CommandType: common.PONG,
+		response = &domain.CommandResponse{
+			CommandType: domain.PONG,
 		}
 	}
 
@@ -120,8 +120,8 @@ func (client *LocalClient) setPingHandler() {
 	conn.SetPingHandler(func(appData string) error {
 		clientRegistry.UpdateHeartBeat(conn)
 		// response with pong
-		err := dataRegistry.WriteResponse(conn, &common.CommandResponse{
-			CommandType: common.PONG,
+		err := dataRegistry.WriteResponse(conn, &domain.CommandResponse{
+			CommandType: domain.PONG,
 		})
 		if err != nil {
 			logger.Errorf("PingHandler fail to WriteMessage Pong for conn:%s error:%e", conn.RemoteAddr(), err)
@@ -131,19 +131,26 @@ func (client *LocalClient) setPingHandler() {
 	})
 }
 
-func (client *LocalClient) onStart(request *common.CommandRequest) *common.CommandResponse {
+func (client *LocalClient) onStart(request *domain.CommandRequest) *domain.CommandResponse {
 	marshal, _ := json.Marshal(request)
 	logger1.Infof("🌏onStart with request: %s", marshal)
 
-	response := &common.CommandResponse{
-		CommandType:    common.START,
+	response := &domain.CommandResponse{
+		CommandType:    domain.START,
 		TraceId:        request.TraceId,
 		ResponseStatus: constant.SUCCESS,
+	}
+
+	// ensure idempotent request
+	if data.GetDataRegistry().IsReady(client.Conn) {
+		response.ResponseStatus = constant.SUCCESS_ALREADY
+		return response
 	}
 
 	// create connector by start request
 	connector := platform.NewConnector(request.Target, client.stopChan)
 	client.Connector = &connector
+	response.Room = *connector.GetRoomInfo()
 	// 0. invoke connect to prepare listen
 	responseStatus := connector.Connect(client.Conn)
 	if !responseStatus.Success {
@@ -173,14 +180,14 @@ func (client *LocalClient) onStart(request *common.CommandRequest) *common.Comma
 	return response
 }
 
-func (client *LocalClient) onLoad(request *common.CommandRequest) *common.CommandResponse {
+func (client *LocalClient) onLoad(request *domain.CommandRequest) *domain.CommandResponse {
 	marshal, _ := json.Marshal(request)
 	logger1.Infof("🌏onLoad with request: %s", marshal)
 
 	responseStatus := constant.SUCCESS
 
-	response := &common.CommandResponse{
-		CommandType:    common.LOAD,
+	response := &domain.CommandResponse{
+		CommandType:    domain.LOAD,
 		TraceId:        request.TraceId,
 		ResponseStatus: responseStatus,
 	}
@@ -198,12 +205,12 @@ func (client *LocalClient) onLoad(request *common.CommandRequest) *common.Comman
 	return response
 }
 
-func (client *LocalClient) onStop(request *common.CommandRequest) *common.CommandResponse {
+func (client *LocalClient) onStop(request *domain.CommandRequest) *domain.CommandResponse {
 	marshal, _ := json.Marshal(request)
 	logger1.Infof("🌏onStop with request: %s", marshal)
 
-	response := &common.CommandResponse{
-		CommandType:    common.STOP,
+	response := &domain.CommandResponse{
+		CommandType:    domain.STOP,
 		TraceId:        request.TraceId,
 		ResponseStatus: constant.SUCCESS,
 	}
@@ -218,9 +225,9 @@ func (client *LocalClient) onStop(request *common.CommandRequest) *common.Comman
 	return response
 }
 
-func (client *LocalClient) TryRevoke() *common.CommandResponse {
-	response := &common.CommandResponse{
-		CommandType:    common.STOP,
+func (client *LocalClient) TryRevoke() *domain.CommandResponse {
+	response := &domain.CommandResponse{
+		CommandType:    domain.STOP,
 		TraceId:        "revoke-" + uuid.NewString(),
 		ResponseStatus: constant.LIVE_CONNECTION_CLOSED,
 	}
@@ -235,11 +242,11 @@ func (client *LocalClient) TryRevoke() *common.CommandResponse {
 	return response
 }
 
-func (client *LocalClient) privateTryStop(response *common.CommandResponse) {
+func (client *LocalClient) privateTryStop(response *domain.CommandResponse) {
 	data.GetDataRegistry().WriteResponse(client.Conn, response)
 	client.Conn.Close()
 
-	if client.Start && !client.Stop {
+	if !client.Stop {
 		close(client.stopChan)
 		client.Stop = true
 		client.Start = false

@@ -43,13 +43,13 @@ https://odd-card-01e.notion.site/web-socket-86f57165e3cd4ca09aaf056ec54ea414
       "type": "start",
       "trace_id": "xx",
       "target": {
-         "live_url" : "https://live.douyin.com/554433484141",
+         "live_url" : "https://live.douyin.com/92380170783",
          "platform": "douyin"
       },
       "service": {
           "api_base_url": "https://aigc-video-dev.softsugar.com/aigc/live/live-api-dev",
-          "project_id": 1351,
-          "authorization": "eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiIwOTI0ZjJjOC0xZjc4LTQyMjgtYmQyYy0zNmQxMjA1MDg5NGIiLCJPcmlnaW5hbFNvdXJjZSI6IlBDX0xJVkUiLCJzdWIiOiI2NDMyMTg1OTUiLCJleHAiOjE2OTQzNTE0NDN9.0u9W4w-hT2o-vR87GrT5kNjvAyyP-O_f7eld82LnInXPI_OfN_dvh6X-bUnfQm6hIdHvGrenri3BV5OzQlAsvA"
+          "project_id": "1351",
+          "authorization": "eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiI3ZDE4NjM3Yi0wN2QwLTRjYzgtYTAxYi1lMWQ3ZmQ3YjhjZTEiLCJPcmlnaW5hbFNvdXJjZSI6IlBDX0xJVkUiLCJzdWIiOiI2NDMyMTg1OTUiLCJleHAiOjE2OTQ3NTQ1NjJ9.3z1tLRYKOagmamOW82R9FGrs4Ya5tJsNgQU-rCwU0EeyexORya4osZRZdEKCwxrjpq_h30icCZgXgzDweCv_3Q"
       }
    }
    ```
@@ -59,7 +59,7 @@ https://odd-card-01e.notion.site/web-socket-86f57165e3cd4ca09aaf056ec54ea414
       "type": "start",
       "trace_id": "xx",
       "target": {
-         "live_url" : "https://live.douyin.com/554433484141",
+         "live_url" : "https://live.douyin.com/646379392926",
          "platform": "douyin"
       },
       "service": {

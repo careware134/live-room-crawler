@@ -8,8 +8,8 @@ import (
 	"github.com/gorilla/websocket"
 	"google.golang.org/protobuf/proto"
 	"io"
-	"live-room-crawler/common"
-	"live-room-crawler/protostub"
+	"live-room-crawler/domain"
+	"live-room-crawler/platform/douyin/protostub"
 	"live-room-crawler/registry/data"
 	"time"
 )
@@ -60,11 +60,11 @@ func (c *ConnectorStrategy) parseMessage(msg *protostub.Message, dataRegistry *d
 		// 点赞消息WebcastLikeMessage；like,2
 		// .total .count eg.	"total": 34136,
 		likeMessage := parseWebcastLikeMessage(msg.Payload)
-		dataRegistry.UpdateStatistics(localConn, common.LIKE, common.BuildStatisticsCounter(likeMessage.Total, false))
+		dataRegistry.UpdateStatistics(localConn, domain.LIKE, domain.BuildStatisticsCounter(likeMessage.Total, false))
 	case "WebcastMemberMessage":
 		memberMessage := parseWebcastMemberMessage(msg.Payload)
-		dataRegistry.EnqueueAction(localConn, common.UserActionEvent{
-			Action:    common.ON_COMMENT,
+		dataRegistry.EnqueueAction(localConn, domain.UserActionEvent{
+			Action:    domain.ON_COMMENT,
 			Username:  memberMessage.GetUser().NickName,
 			Content:   memberMessage.GetUser().NickName + "加入了房间",
 			EventTime: time.Unix(int64(memberMessage.Common.CreateTime), 0),
@@ -73,11 +73,11 @@ func (c *ConnectorStrategy) parseMessage(msg *protostub.Message, dataRegistry *d
 		// 礼物消息WebcastGiftMessage; gift,3
 		// .repeatCount 	"repeatCount": 10,
 		// .comboCount	"comboCount": 10,
-		// .common.describe e.g 		"describe": "长孙明亮:送给主播 10个你最好看",
+		// .domain.describe e.g 		"describe": "长孙明亮:送给主播 10个你最好看",
 		giftMessage := parseWebcastGiftMessage(msg.Payload)
-		dataRegistry.UpdateStatistics(localConn, common.GIFT, common.BuildStatisticsCounter(giftMessage.ComboCount, true))
-		dataRegistry.EnqueueAction(localConn, common.UserActionEvent{
-			Action:    common.ON_COMMENT,
+		dataRegistry.UpdateStatistics(localConn, domain.GIFT, domain.BuildStatisticsCounter(giftMessage.ComboCount, true))
+		dataRegistry.EnqueueAction(localConn, domain.UserActionEvent{
+			Action:    domain.ON_COMMENT,
 			Username:  giftMessage.GetUser().NickName,
 			Content:   giftMessage.Common.Describe,
 			EventTime: time.Unix(int64(giftMessage.Common.CreateTime), 0),
@@ -85,9 +85,9 @@ func (c *ConnectorStrategy) parseMessage(msg *protostub.Message, dataRegistry *d
 	case "WebcastChatMessage":
 		// comment,6
 		chatMessage := parseWebcastChatMessage(msg.Payload)
-		dataRegistry.UpdateStatistics(localConn, common.COMMENT, common.BuildStatisticsCounter(1, true))
-		dataRegistry.EnqueueAction(localConn, common.UserActionEvent{
-			Action:    common.ON_COMMENT,
+		dataRegistry.UpdateStatistics(localConn, domain.COMMENT, domain.BuildStatisticsCounter(1, true))
+		dataRegistry.EnqueueAction(localConn, domain.UserActionEvent{
+			Action:    domain.ON_COMMENT,
 			Username:  chatMessage.GetUser().NickName,
 			Content:   chatMessage.Content,
 			EventTime: time.Unix(int64(chatMessage.EventTime), 0),
@@ -96,15 +96,15 @@ func (c *ConnectorStrategy) parseMessage(msg *protostub.Message, dataRegistry *d
 		// 关注WebcastSocialMessage； follow,4
 		// .followCount, eg."followCount": "2193637",
 		socialMessage := parseWebcastSocialMessage(msg.Payload)
-		dataRegistry.UpdateStatistics(localConn, common.FOLLOW, common.BuildStatisticsCounter(socialMessage.FollowCount, true))
+		dataRegistry.UpdateStatistics(localConn, domain.FOLLOW, domain.BuildStatisticsCounter(socialMessage.FollowCount, true))
 	case "WebcastRoomUserSeqMessage":
 		//seqMessage := parseWebcastRoomUserSeqMessage(msg.Payload)
 		// 榜单数据
 		// .totalUser == totalPvForAnchor 浏览人数 view,5
 		// .total == onlineUserForAnchor 在线人数 online,1
 		seqMessage := parseWebcastRoomUserSeqMessage(msg.Payload)
-		dataRegistry.UpdateStatistics(localConn, common.VIEW, common.BuildStatisticsCounter(uint64(seqMessage.TotalUser), true))
-		dataRegistry.UpdateStatistics(localConn, common.ONLINE, common.BuildStatisticsCounter(uint64(seqMessage.Total), true))
+		dataRegistry.UpdateStatistics(localConn, domain.VIEW, domain.BuildStatisticsCounter(uint64(seqMessage.TotalUser), true))
+		dataRegistry.UpdateStatistics(localConn, domain.ONLINE, domain.BuildStatisticsCounter(uint64(seqMessage.Total), true))
 	case "WebcastUpdateFanTicketMessage":
 		parseWebcastUpdateFanTicketMessage(msg.Payload)
 	case "WebcastCommonTextMessage":

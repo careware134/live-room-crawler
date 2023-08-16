@@ -310,7 +310,7 @@ type ChatMessage struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Common               *Common              `protobuf:"bytes,1,opt,name=common,proto3" json:"common,omitempty"`
+	Common               *Common              `protobuf:"bytes,1,opt,name=domain,proto3" json:"domain,omitempty"`
 	User                 *User                `protobuf:"bytes,2,opt,name=user,proto3" json:"user,omitempty"`
 	Content              string               `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`
 	VisibleToSender      bool                 `protobuf:"varint,4,opt,name=visibleToSender,proto3" json:"visibleToSender,omitempty"`
@@ -581,7 +581,7 @@ type RoomUserSeqMessage struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Common                  *Common                          `protobuf:"bytes,1,opt,name=common,proto3" json:"common,omitempty"`
+	Common                  *Common                          `protobuf:"bytes,1,opt,name=domain,proto3" json:"domain,omitempty"`
 	RanksList               []*RoomUserSeqMessageContributor `protobuf:"bytes,2,rep,name=ranksList,proto3" json:"ranksList,omitempty"`
 	Total                   int64                            `protobuf:"varint,3,opt,name=total,proto3" json:"total,omitempty"`
 	PopStr                  string                           `protobuf:"bytes,4,opt,name=popStr,proto3" json:"popStr,omitempty"`
@@ -724,7 +724,7 @@ type CommonTextMessage struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Common *Common `protobuf:"bytes,1,opt,name=common,proto3" json:"common,omitempty"`
+	Common *Common `protobuf:"bytes,1,opt,name=domain,proto3" json:"domain,omitempty"`
 	User   *User   `protobuf:"bytes,2,opt,name=user,proto3" json:"user,omitempty"`
 	Scene  string  `protobuf:"bytes,3,opt,name=scene,proto3" json:"scene,omitempty"`
 }
@@ -787,7 +787,7 @@ type UpdateFanTicketMessage struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Common                 *Common `protobuf:"bytes,1,opt,name=common,proto3" json:"common,omitempty"`
+	Common                 *Common `protobuf:"bytes,1,opt,name=domain,proto3" json:"domain,omitempty"`
 	RoomFanTicketCountText string  `protobuf:"bytes,2,opt,name=roomFanTicketCountText,proto3" json:"roomFanTicketCountText,omitempty"`
 	RoomFanTicketCount     uint64  `protobuf:"varint,3,opt,name=roomFanTicketCount,proto3" json:"roomFanTicketCount,omitempty"`
 	ForceUpdate            bool    `protobuf:"varint,4,opt,name=forceUpdate,proto3" json:"forceUpdate,omitempty"`
@@ -954,7 +954,7 @@ type GiftMessage struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Common               *Common           `protobuf:"bytes,1,opt,name=common,proto3" json:"common,omitempty"`
+	Common               *Common           `protobuf:"bytes,1,opt,name=domain,proto3" json:"domain,omitempty"`
 	GiftId               uint64            `protobuf:"varint,2,opt,name=giftId,proto3" json:"giftId,omitempty"`
 	FanTicketCount       uint64            `protobuf:"varint,3,opt,name=fanTicketCount,proto3" json:"fanTicketCount,omitempty"`
 	GroupCount           uint64            `protobuf:"varint,4,opt,name=groupCount,proto3" json:"groupCount,omitempty"`
@@ -1723,7 +1723,7 @@ type MemberMessage struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Common             *Common           `protobuf:"bytes,1,opt,name=common,proto3" json:"common,omitempty"`
+	Common             *Common           `protobuf:"bytes,1,opt,name=domain,proto3" json:"domain,omitempty"`
 	User               *User             `protobuf:"bytes,2,opt,name=user,proto3" json:"user,omitempty"`
 	MemberCount        uint64            `protobuf:"varint,3,opt,name=memberCount,proto3" json:"memberCount,omitempty"`
 	Operator           *User             `protobuf:"bytes,4,opt,name=operator,proto3" json:"operator,omitempty"`
@@ -2808,7 +2808,7 @@ type LikeMessage struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Common             *Common             `protobuf:"bytes,1,opt,name=common,proto3" json:"common,omitempty"`
+	Common             *Common             `protobuf:"bytes,1,opt,name=domain,proto3" json:"domain,omitempty"`
 	Count              uint64              `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
 	Total              uint64              `protobuf:"varint,3,opt,name=total,proto3" json:"total,omitempty"`
 	Color              uint64              `protobuf:"varint,4,opt,name=color,proto3" json:"color,omitempty"`
@@ -2935,7 +2935,7 @@ type SocialMessage struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Common           *Common           `protobuf:"bytes,1,opt,name=common,proto3" json:"common,omitempty"`
+	Common           *Common           `protobuf:"bytes,1,opt,name=domain,proto3" json:"domain,omitempty"`
 	User             *User             `protobuf:"bytes,2,opt,name=user,proto3" json:"user,omitempty"`
 	ShareType        uint64            `protobuf:"varint,3,opt,name=shareType,proto3" json:"shareType,omitempty"`
 	Action           uint64            `protobuf:"varint,4,opt,name=action,proto3" json:"action,omitempty"`
@@ -3227,7 +3227,7 @@ type EpisodeChatMessage struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Common         *Message `protobuf:"bytes,1,opt,name=common,proto3" json:"common,omitempty"`
+	Common         *Message `protobuf:"bytes,1,opt,name=domain,proto3" json:"domain,omitempty"`
 	User           *User    `protobuf:"bytes,2,opt,name=user,proto3" json:"user,omitempty"`
 	Content        string   `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`
 	VisibleToSende bool     `protobuf:"varint,4,opt,name=visibleToSende,proto3" json:"visibleToSende,omitempty"`
@@ -3324,7 +3324,7 @@ type MatchAgainstScoreMessage struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Common        *Common  `protobuf:"bytes,1,opt,name=common,proto3" json:"common,omitempty"`
+	Common        *Common  `protobuf:"bytes,1,opt,name=domain,proto3" json:"domain,omitempty"`
 	Against       *Against `protobuf:"bytes,2,opt,name=against,proto3" json:"against,omitempty"`
 	MatchStatus   uint32   `protobuf:"varint,3,opt,name=matchStatus,proto3" json:"matchStatus,omitempty"`
 	DisplayStatus uint32   `protobuf:"varint,4,opt,name=displayStatus,proto3" json:"displayStatus,omitempty"`
@@ -6143,7 +6143,7 @@ var file_douyin_proto_goTypes = []interface{}{
 var file_douyin_proto_depIdxs = []int32{
 	2,  // 0: douyin.Response.messagesList:type_name -> douyin.Message
 	47, // 1: douyin.Response.routeParams:type_name -> douyin.Response.RouteParamsEntry
-	34, // 2: douyin.ChatMessage.common:type_name -> douyin.Common
+	34, // 2: douyin.ChatMessage.domain:type_name -> douyin.Common
 	35, // 3: douyin.ChatMessage.user:type_name -> douyin.User
 	37, // 4: douyin.ChatMessage.backgroundImage:type_name -> douyin.Image
 	37, // 5: douyin.ChatMessage.backgroundImageV2:type_name -> douyin.Image
@@ -6152,14 +6152,14 @@ var file_douyin_proto_depIdxs = []int32{
 	4,  // 8: douyin.ChatMessage.landscapeAreaCommon:type_name -> douyin.LandscapeAreaCommon
 	17, // 9: douyin.ChatMessage.rtfContent:type_name -> douyin.Text
 	0,  // 10: douyin.LandscapeAreaCommon.commentTypeTagsList:type_name -> douyin.CommentTypeTag
-	34, // 11: douyin.RoomUserSeqMessage.common:type_name -> douyin.Common
+	34, // 11: douyin.RoomUserSeqMessage.domain:type_name -> douyin.Common
 	8,  // 12: douyin.RoomUserSeqMessage.ranksList:type_name -> douyin.RoomUserSeqMessageContributor
 	8,  // 13: douyin.RoomUserSeqMessage.seatsList:type_name -> douyin.RoomUserSeqMessageContributor
-	34, // 14: douyin.CommonTextMessage.common:type_name -> douyin.Common
+	34, // 14: douyin.CommonTextMessage.domain:type_name -> douyin.Common
 	35, // 15: douyin.CommonTextMessage.user:type_name -> douyin.User
-	34, // 16: douyin.UpdateFanTicketMessage.common:type_name -> douyin.Common
+	34, // 16: douyin.UpdateFanTicketMessage.domain:type_name -> douyin.Common
 	35, // 17: douyin.RoomUserSeqMessageContributor.user:type_name -> douyin.User
-	34, // 18: douyin.GiftMessage.common:type_name -> douyin.Common
+	34, // 18: douyin.GiftMessage.domain:type_name -> douyin.Common
 	35, // 19: douyin.GiftMessage.user:type_name -> douyin.User
 	35, // 20: douyin.GiftMessage.toUser:type_name -> douyin.User
 	12, // 21: douyin.GiftMessage.textEffect:type_name -> douyin.TextEffect
@@ -6174,7 +6174,7 @@ var file_douyin_proto_depIdxs = []int32{
 	13, // 30: douyin.TextEffect.landscape:type_name -> douyin.TextEffectDetail
 	17, // 31: douyin.TextEffectDetail.text:type_name -> douyin.Text
 	37, // 32: douyin.TextEffectDetail.background:type_name -> douyin.Image
-	34, // 33: douyin.MemberMessage.common:type_name -> douyin.Common
+	34, // 33: douyin.MemberMessage.domain:type_name -> douyin.Common
 	35, // 34: douyin.MemberMessage.user:type_name -> douyin.User
 	35, // 35: douyin.MemberMessage.operator:type_name -> douyin.User
 	16, // 36: douyin.MemberMessage.effectConfig:type_name -> douyin.EffectConfig
@@ -6203,19 +6203,19 @@ var file_douyin_proto_depIdxs = []int32{
 	37, // 59: douyin.TextPieceImage.image:type_name -> douyin.Image
 	23, // 60: douyin.TextPieceGift.nameRef:type_name -> douyin.PatternRef
 	35, // 61: douyin.TextPieceUser.user:type_name -> douyin.User
-	34, // 62: douyin.LikeMessage.common:type_name -> douyin.Common
+	34, // 62: douyin.LikeMessage.domain:type_name -> douyin.Common
 	35, // 63: douyin.LikeMessage.user:type_name -> douyin.User
 	29, // 64: douyin.LikeMessage.doubleLikeDetail:type_name -> douyin.DoubleLikeDetail
 	30, // 65: douyin.LikeMessage.displayControlInfo:type_name -> douyin.DisplayControlInfo
 	28, // 66: douyin.LikeMessage.picoDisplayInfo:type_name -> douyin.PicoDisplayInfo
-	34, // 67: douyin.SocialMessage.common:type_name -> douyin.Common
+	34, // 67: douyin.SocialMessage.domain:type_name -> douyin.Common
 	35, // 68: douyin.SocialMessage.user:type_name -> douyin.User
 	15, // 69: douyin.SocialMessage.publicAreaCommon:type_name -> douyin.PublicAreaCommon
 	37, // 70: douyin.PicoDisplayInfo.emojiIcon:type_name -> douyin.Image
-	2,  // 71: douyin.EpisodeChatMessage.common:type_name -> douyin.Message
+	2,  // 71: douyin.EpisodeChatMessage.domain:type_name -> douyin.Message
 	35, // 72: douyin.EpisodeChatMessage.user:type_name -> douyin.User
 	37, // 73: douyin.EpisodeChatMessage.giftImage:type_name -> douyin.Image
-	34, // 74: douyin.MatchAgainstScoreMessage.common:type_name -> douyin.Common
+	34, // 74: douyin.MatchAgainstScoreMessage.domain:type_name -> douyin.Common
 	33, // 75: douyin.MatchAgainstScoreMessage.against:type_name -> douyin.Against
 	37, // 76: douyin.Against.leftLogo:type_name -> douyin.Image
 	37, // 77: douyin.Against.rightLogo:type_name -> douyin.Image

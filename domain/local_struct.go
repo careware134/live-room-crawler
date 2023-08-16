@@ -1,4 +1,4 @@
-package common
+package domain
 
 import (
 	"live-room-crawler/constant"

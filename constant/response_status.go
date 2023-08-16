@@ -8,6 +8,7 @@ type ResponseStatus struct {
 
 var (
 	SUCCESS                = ResponseStatus{Success: true, Code: "SUCCESS", Message: "成功"}
+	SUCCESS_ALREADY        = ResponseStatus{Success: true, Code: "SUCCESS_ALREADY", Message: "成功，请勿重复start！"}
 	LOAD_RULE_FAIL         = ResponseStatus{Success: false, Code: "LOAD_RULE_FAIL", Message: "加载规则失败！"}
 	CLIENT_NOT_READY       = ResponseStatus{Success: false, Code: "CLIENT_NOT_READY", Message: "客户端未准备就绪，请检查配置！"}
 	CONNECTION_FAIL        = ResponseStatus{Success: false, Code: "CONNECTION_FAIL", Message: "直播平台连接失败！"}
@@ -18,7 +19,7 @@ var (
 const (
 	PlayUserAction          = false
 	PlayDequeuePushInterval = 1
-	HeartbeatCheckInterval  = 60
+	HeartbeatCheckInterval  = 15
 	LogRound                = 60
 	LoadGuideRuleURI        = "rule/guide/loadByProjectId"
 )

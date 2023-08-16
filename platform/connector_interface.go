@@ -2,13 +2,13 @@ package platform
 
 import (
 	"github.com/gorilla/websocket"
-	"live-room-crawler/common"
 	"live-room-crawler/constant"
+	"live-room-crawler/domain"
 	"live-room-crawler/platform/douyin"
 )
 
 type IPlatformConnectorStrategy interface {
-	GetRoomInfo() *common.RoomInfo
+	GetRoomInfo() *domain.RoomInfo
 
 	Connect(localConn *websocket.Conn) constant.ResponseStatus
 
@@ -19,8 +19,8 @@ type IPlatformConnectorStrategy interface {
 	IsAlive() bool
 }
 
-func NewConnector(targetStruct common.TargetStruct, stopChan chan struct{}) IPlatformConnectorStrategy {
-	if targetStruct.Platform == common.DOUYIN {
+func NewConnector(targetStruct domain.TargetStruct, stopChan chan struct{}) IPlatformConnectorStrategy {
+	if targetStruct.Platform == domain.DOUYIN {
 		return douyin.NewInstance(targetStruct.LiveURL, stopChan)
 	}
 	return nil

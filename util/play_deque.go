@@ -1,25 +1,27 @@
-package common
+package util
+
+import "live-room-crawler/domain"
 
 type PlayDeque struct {
 	maxSize int
-	deque   []UserActionEvent
+	deque   []domain.UserActionEvent
 }
 
 func NewFixedSizeDeque(maxSize int) *PlayDeque {
 	return &PlayDeque{
 		maxSize: maxSize,
-		deque:   make([]UserActionEvent, 0, maxSize),
+		deque:   make([]domain.UserActionEvent, 0, maxSize),
 	}
 }
 
-func (d *PlayDeque) PushFront(item UserActionEvent) {
+func (d *PlayDeque) PushFront(item domain.UserActionEvent) {
 	if len(d.deque) >= d.maxSize {
 		d.deque = d.deque[:d.maxSize-1]
 	}
-	d.deque = append([]UserActionEvent{item}, d.deque...)
+	d.deque = append([]domain.UserActionEvent{item}, d.deque...)
 }
 
-func (d *PlayDeque) PushBack(item UserActionEvent) {
+func (d *PlayDeque) PushBack(item domain.UserActionEvent) {
 	if d.deque == nil {
 
 	}
@@ -29,7 +31,7 @@ func (d *PlayDeque) PushBack(item UserActionEvent) {
 	d.deque = append(d.deque, item)
 }
 
-func (d *PlayDeque) PopFront() *UserActionEvent {
+func (d *PlayDeque) PopFront() *domain.UserActionEvent {
 	if len(d.deque) == 0 {
 		return nil
 	}
@@ -38,7 +40,7 @@ func (d *PlayDeque) PopFront() *UserActionEvent {
 	return &item
 }
 
-func (d *PlayDeque) PopBack() *UserActionEvent {
+func (d *PlayDeque) PopBack() *domain.UserActionEvent {
 	if len(d.deque) == 0 {
 		return nil
 	}
@@ -61,5 +63,5 @@ func (d *PlayDeque) IsFull() bool {
 }
 
 func (d *PlayDeque) Clear() {
-	d.deque = make([]UserActionEvent, 0, d.maxSize)
+	d.deque = make([]domain.UserActionEvent, 0, d.maxSize)
 }
