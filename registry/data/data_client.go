@@ -89,7 +89,7 @@ func (item *RegistryItem) LoadRule() constant.ResponseStatus {
 		return responseStatus
 	}
 
-	if ruleResponse.DataList != nil && len(ruleResponse.DataList) > 0 {
+	if ruleResponse.DataList != nil && len(ruleResponse.DataList) > 0 { // ? how if user clear his rules
 		item.RuleGroupList = make(map[domain.CounterType][]domain.Rule)
 	}
 	ruleRegistry := item.RuleGroupList

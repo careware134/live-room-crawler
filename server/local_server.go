@@ -48,9 +48,9 @@ func listenHandler(response http.ResponseWriter, request *http.Request) {
 		logger.Println(err)
 		return
 	}
-
-	clientRegistry := connection.GetClientRegistry()
-	clientRegistry.AddClient(conn)
 	client := connection.NewClient(conn)
+	clientRegistry := connection.GetClientRegistry()
+	clientRegistry.AddTempClient(conn)
+
 	go client.StartListenConnection(conn)
 }

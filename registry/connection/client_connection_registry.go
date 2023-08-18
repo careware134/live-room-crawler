@@ -36,10 +36,10 @@ func GetClientRegistry() *ClientConnectionRegistry {
 	return instance
 }
 
-func (r *ClientConnectionRegistry) AddClient(client *websocket.Conn) {
+func (r *ClientConnectionRegistry) AddTempClient(client *websocket.Conn) {
 	r.m.Lock()
 	defer r.m.Unlock()
-	logger.Info("AddClient invoked connection addr:", client.RemoteAddr())
+	logger.Info("AddTempClient invoked connection addr:", client.RemoteAddr())
 
 	r.clients[client] = 0
 	r.heartbeatLostRegistry[client] = 0

@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bitbucket.org/neiku/winornot"
 	"flag"
 	"fmt"
+	"github.com/1set/gut/yos"
 	"live-room-crawler/domain"
 	"live-room-crawler/platform"
 	"live-room-crawler/server"
@@ -10,11 +12,12 @@ import (
 )
 
 var (
-	cliMode      bool   = false
-	platformName string = "douyin"
-	liveUrl      string = "https://live.douyin.com/416700408775"
+	cliMode      = false
+	platformName = "douyin"
+	liveUrl      = "https://live.douyin.com/416700408775"
 
-	serverMode bool = false
+	serverMode = false
+	daemonMode = false
 	port       int
 )
 
@@ -24,6 +27,8 @@ func main() {
 
 	flag.BoolVar(&cliMode, "c", false, "cli mode")
 	flag.BoolVar(&serverMode, "s", false, "server mode")
+	flag.BoolVar(&daemonMode, "d", false, "daemon mode")
+
 	flag.StringVar(&platformName, "platform", "douyin", "抖音直播间URL, eg: https://live.douyin.com/416700408775")
 	flag.StringVar(&liveUrl, "url", "", "抖音直播间URL, eg: https://live.douyin.com/416700408775")
 	flag.IntVar(&port, "port", 50000, "verbose log")
@@ -33,15 +38,17 @@ func main() {
 	// Validate arguments
 	if !serverMode && !cliMode {
 		fmt.Printf("必须传以下参数: \n" +
-			"\t -c: 演示模式；直接输出日志" +
-			"\t\t -platform: 直播平台，枚举：douyin,kuaishou(NSY)" +
+			"\t -d: 后台模式，隐藏控制台\n" +
+			"\t -c: 演示模式；直接输出日志\n" +
+			"\t\t -platform: 直播平台，枚举：douyin,kuaishou(NSY)\n" +
 			"\t\t -url: \t  抖音直播间的http URL地址；例如：https://live.douyin.com/416700408775\n" +
 			"\t\t e.g. \n" +
 			"\t\t live-room-crawler.exe -c -platform douyin -url https://live.douyin.com/416700408775\n" +
-			"\t -s: 运行模式；监听客户端的指令" +
+			"\t -s: 运行模式；监听客户端的指令\n" +
 			"\t\t -port: \t 小程序监听的本地端口号，例如：50000 \n" +
 			"\t\t e.g. \n" +
-			"\t\t live-room-crawler.exe -s -port 50000")
+			"\t\t live-room-crawler.exe -s -port 50000\n")
+		//panic("缺少参数")
 		return
 	}
 
@@ -70,6 +77,19 @@ func main() {
 
 	if serverMode {
 		server.StartLocalServer(port)
+	}
+
+	// for windows workaround
+	winornot.DisableConsoleExtendedEditMode()
+	winornot.EnableANSIControl()
+
+	if daemonMode {
+		if yos.IsOnWindows() {
+			winornot.HideConsole()
+			logger.Info("[main]attempt to hide console window on windows")
+		} else {
+			logger.Warn("[main]can't hide console window on non-windows")
+		}
 	}
 
 }
