@@ -120,7 +120,10 @@ func (r *EventDataRegistry) WriteResponse(client *websocket.Conn, commandRespons
 		client.WriteMessage(websocket.TextMessage, marshal)
 		return errors.New(constant.CLIENT_NOT_READY.Message)
 	}
-	item.WriteResponse(commandResponse)
+	err := item.WriteResponse(commandResponse)
+	if err != nil {
+		logger.Errorf("[dataRegistry]WriteResponse fail with err:%s", err)
+	}
 	return nil
 }
 

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	"github.com/thoas/go-funk"
 	"io"
 	"live-room-crawler/constant"
 	"live-room-crawler/domain"
@@ -41,7 +42,7 @@ func (item *RegistryItem) CompareRule(counterType domain.CounterType, counter *d
 	ruleList := item.RuleGroupList[counterType]
 
 	for _, rule := range ruleList {
-		if rule.AnswerList == nil || len(rule.AnswerList) == 0 {
+		if !rule.Enable || rule.AnswerList == nil || len(rule.AnswerList) == 0 {
 			continue
 		}
 
@@ -99,7 +100,13 @@ func (item *RegistryItem) LoadRule(traceId string) constant.ResponseStatus {
 			return groupItem.RuleList[i].Threshold > groupItem.RuleList[j].Threshold &&
 				groupItem.RuleList[i].DriverType > groupItem.RuleList[j].DriverType
 		})
-		ruleRegistry[domain.CounterType(dictionary.Name)] = groupItem.RuleList
+
+		// filter out all enabled rules
+		filteredList := funk.Filter(groupItem.RuleList, func(rule domain.Rule) bool {
+			return rule.Enable
+		}).([]domain.Rule)
+		// load rules which only enabled
+		ruleRegistry[domain.CounterType(dictionary.Name)] = filteredList
 	}
 
 	return constant.SUCCESS

@@ -8,8 +8,8 @@ type CommandType string
 
 const (
 	START CommandType = "start" // 开始直播；开始直播信号
-	// LOAD // READY  CommandType = "ready" // 准备就绪； 直播间地址已配置就绪；
-	LOAD    CommandType = "load"    // 更新规则
+	// READY  CommandType = "ready" // 准备就绪； 直播间地址已配置就绪；
+	// LOAD    CommandType = "load"    // 更新规则
 	REFRESH CommandType = "refresh" // 更新规则
 	STOP    CommandType = "stop"
 	PLAY    CommandType = "play"

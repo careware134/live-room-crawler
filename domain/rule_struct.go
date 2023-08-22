@@ -20,6 +20,7 @@ type Rule struct {
 	UserID        string   `json:"userId,omitempty"`
 	TenantID      string   `json:"tenantId,omitempty"`
 	ProjectID     string   `json:"projectId,omitempty"`
+	Enable        bool     `json:"enable,omitempty"`
 	Sync          bool     `json:"sync,omitempty"`
 	ReferID       int      `json:"referId,omitempty"`
 	RuleType      int      `json:"ruleType,omitempty"`

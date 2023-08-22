@@ -62,6 +62,15 @@ func main() {
 		return
 	}
 
+	if daemonMode {
+		if yos.IsOnWindows() {
+			winornot.HideConsole()
+			logger.Info("[main]attempt to hide console window on windows")
+		} else {
+			logger.Warn("[main]can't hide console window on non-windows")
+		}
+	}
+
 	if cliMode {
 		logger.Infof("ready to crawl platform:%s url:%s ", platformName, liveUrl)
 		platformConnector := platform.NewConnector(domain.TargetStruct{
@@ -77,19 +86,6 @@ func main() {
 
 	if serverMode {
 		server.StartLocalServer(port)
-	}
-
-	// for windows workaround
-	winornot.DisableConsoleExtendedEditMode()
-	winornot.EnableANSIControl()
-
-	if daemonMode {
-		if yos.IsOnWindows() {
-			winornot.HideConsole()
-			logger.Info("[main]attempt to hide console window on windows")
-		} else {
-			logger.Warn("[main]can't hide console window on non-windows")
-		}
 	}
 
 }
