@@ -92,13 +92,16 @@ func (client *LocalClient) OnCommand(
 	json.Unmarshal(message, request)
 
 	response := &domain.CommandResponse{
-		CommandType: request.CommandType,
+		CommandType:    request.CommandType,
+		ResponseStatus: constant.UNKNOWN_COMMAND,
 	}
 	switch request.CommandType {
 	case domain.START:
 		response = client.onStart(request)
-	case domain.LOAD:
-		response = client.onLoad(request)
+	//case domain.LOAD:
+	//	response = client.onRefresh(request)
+	case domain.REFRESH:
+		response = client.onRefresh(request)
 	case domain.STOP:
 		response = client.onStop(request)
 	case domain.PING:
@@ -162,7 +165,7 @@ func (client *LocalClient) onStart(request *domain.CommandRequest) *domain.Comma
 	GetClientRegistry().MarkReady(client.Conn, request, client)
 
 	// .2 if connect success, then load rule
-	responseStatus = data.GetDataRegistry().LoadRule(client.Conn)
+	responseStatus = data.GetDataRegistry().LoadRule(request.TraceId, client.Conn)
 	if !responseStatus.Success {
 		response.ResponseStatus = responseStatus
 		GetClientRegistry().RemoveClient(client.Conn, false)
@@ -180,27 +183,27 @@ func (client *LocalClient) onStart(request *domain.CommandRequest) *domain.Comma
 	return response
 }
 
-func (client *LocalClient) onLoad(request *domain.CommandRequest) *domain.CommandResponse {
+func (client *LocalClient) onRefresh(request *domain.CommandRequest) *domain.CommandResponse {
 	marshal, _ := json.Marshal(request)
-	logger1.Infof("🌏onLoad with request: %s", marshal)
+	logger1.Infof("🌏onRefresh with request: %s", marshal)
 
 	responseStatus := constant.SUCCESS
 
 	response := &domain.CommandResponse{
-		CommandType:    domain.LOAD,
+		CommandType:    domain.REFRESH,
 		TraceId:        request.TraceId,
 		ResponseStatus: responseStatus,
 	}
 
 	// .2 if connect success, then load rule
-	responseStatus = data.GetDataRegistry().LoadRule(client.Conn)
+	responseStatus = data.GetDataRegistry().LoadRule(request.TraceId, client.Conn)
 	if !responseStatus.Success {
 		response.ResponseStatus = responseStatus
 		return response
 	}
 
 	marshal, _ = json.Marshal(response)
-	logger1.Infof("🌏onLoad with response: %s", marshal)
+	logger1.Infof("🌏onRefresh with response: %s", marshal)
 
 	return response
 }

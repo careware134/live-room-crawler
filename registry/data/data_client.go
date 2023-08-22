@@ -79,12 +79,12 @@ func (item *RegistryItem) CompareRule(counterType domain.CounterType, counter *d
 	return nil
 }
 
-func (item *RegistryItem) LoadRule() constant.ResponseStatus {
+func (item *RegistryItem) LoadRule(traceId string) constant.ResponseStatus {
 	item.countLock.Lock()
 	defer item.countLock.Unlock()
 
 	servicePart := item.StartRequest.Service
-	responseStatus, ruleResponse := requestGetRule(servicePart)
+	responseStatus, ruleResponse := requestGetRule(traceId, servicePart)
 	if !responseStatus.Success {
 		return responseStatus
 	}
@@ -164,7 +164,7 @@ func (item *RegistryItem) WriteResponse(response *domain.CommandResponse) error 
 	}
 }
 
-func requestGetRule(servicePart domain.ServiceStruct) (constant.ResponseStatus, *domain.RuleResponse) {
+func requestGetRule(traceId string, servicePart domain.ServiceStruct) (constant.ResponseStatus, *domain.RuleResponse) {
 	if servicePart.ApiBaseURL == "" {
 		return constant.LOAD_RULE_FAIL, nil
 	}
@@ -181,6 +181,7 @@ func requestGetRule(servicePart domain.ServiceStruct) (constant.ResponseStatus, 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", servicePart.Authorization)
 	req.Header.Set("TenantId", servicePart.TenantId)
+	req.Header.Set("CustomTraceId", traceId)
 
 	httpClient := &http.Client{}
 	response, err := httpClient.Do(req)

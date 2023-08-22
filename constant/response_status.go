@@ -8,6 +8,7 @@ type ResponseStatus struct {
 
 var (
 	SUCCESS                = ResponseStatus{Success: true, Code: "SUCCESS", Message: "成功"}
+	UNKNOWN_COMMAND        = ResponseStatus{Success: false, Code: "LOAD_RULE_FAIL", Message: "加载规则失败！"}
 	SUCCESS_ALREADY        = ResponseStatus{Success: true, Code: "SUCCESS_ALREADY", Message: "成功，请勿重复start！"}
 	LOAD_RULE_FAIL         = ResponseStatus{Success: false, Code: "LOAD_RULE_FAIL", Message: "加载规则失败！"}
 	CLIENT_NOT_READY       = ResponseStatus{Success: false, Code: "CLIENT_NOT_READY", Message: "客户端未准备就绪，请检查配置！"}

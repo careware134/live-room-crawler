@@ -104,12 +104,12 @@ func (r *EventDataRegistry) pushUserAction(client *websocket.Conn, registryItem 
 	}
 }
 
-func (r *EventDataRegistry) LoadRule(client *websocket.Conn) constant.ResponseStatus {
+func (r *EventDataRegistry) LoadRule(traceId string, client *websocket.Conn) constant.ResponseStatus {
 	item := r.registryItems[client]
 	if item == nil {
 		return constant.CLIENT_NOT_READY
 	}
-	return item.LoadRule()
+	return item.LoadRule(traceId)
 }
 
 func (r *EventDataRegistry) WriteResponse(client *websocket.Conn, commandResponse *domain.CommandResponse) error {
