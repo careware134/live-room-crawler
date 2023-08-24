@@ -153,8 +153,15 @@ func (client *LocalClient) onStart(request *domain.CommandRequest) *domain.Comma
 	// create connector by start request
 	connector := platform.NewConnector(request.Target, client.stopChan)
 	client.Connector = &connector
-	response.Room = *connector.GetRoomInfo()
+	info := connector.GetRoomInfo()
+	if info == nil {
+		response.ResponseStatus = constant.INVALID_LIVE_URL
+		logger.Errorf("onStart fail with INVALID_LIVE_URL")
+		return response
+	}
+
 	// 0. invoke connect to prepare listen
+	response.Room = *info
 	responseStatus := connector.Connect(client.Conn)
 	if !responseStatus.Success {
 		response.ResponseStatus = responseStatus
