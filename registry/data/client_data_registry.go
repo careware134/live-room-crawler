@@ -79,12 +79,7 @@ func (r *EventDataRegistry) StartPushPlayMessage() {
 			r.pushUserAction(client, registryItem)
 		}
 
-		// Check each connected connection
-		//for client, registryItem := range r.registryItems {
-		//	r.pushStatisticRulePlay(client, registryItem)
-		//}
-
-		// Sleep for 10 seconds
+		// Sleep for PlayDequeuePushInterval(=1 by default) seconds
 		time.Sleep(constant.PlayDequeuePushInterval * time.Second)
 		round++
 
@@ -92,15 +87,25 @@ func (r *EventDataRegistry) StartPushPlayMessage() {
 
 }
 
+// pop action queue and query NLP to try get a response
 func (r *EventDataRegistry) pushUserAction(client *websocket.Conn, registryItem *RegistryItem) {
 	for !registryItem.PlayDeque.IsEmpty() {
 		playMessage := registryItem.PlayDeque.PopFront()
-		if constant.PlayUserAction && playMessage != nil {
-			playMessage := playMessage.ToPlayMessage()
-			marshal, _ := json.Marshal(playMessage)
-			logger.Infof("[EventDataRegistry]PushPlayMessage[🎬⚙️] message: %s connection: %s", marshal, client.RemoteAddr())
-			r.WriteResponse(client, playMessage)
+		if playMessage.Action != domain.ON_COMMENT {
+			continue
 		}
+
+		item := r.registryItems[client]
+		queryResponse := item.RequestNlp(playMessage.Username, playMessage.Content)
+		if queryResponse == nil || queryResponse.Meta.Catchall {
+			logger.Infof("[EventDataRegistry]PushPlayMessage[🤐]skip for CHATCHALL to  query: %s connection: %s", playMessage.Content, client.RemoteAddr())
+			continue
+		}
+
+		message := queryResponse.ToPlayMessage()
+		marshal, _ := json.Marshal(playMessage)
+		logger.Infof("[EventDataRegistry]PushPlayMessage[🎬⚙️] chat message: %s connection: %s", marshal, client.RemoteAddr())
+		r.WriteResponse(client, message)
 	}
 }
 

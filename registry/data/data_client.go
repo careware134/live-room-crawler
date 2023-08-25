@@ -1,7 +1,9 @@
 package data
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/thoas/go-funk"
@@ -169,6 +171,49 @@ func (item *RegistryItem) WriteResponse(response *domain.CommandResponse) error 
 		logger.Infof("🖋[EventDataRegistry]WriteResponse invoked connection addr:%s response:%s", item.conn.RemoteAddr(), marshal)
 		return err
 	}
+}
+
+func (item *RegistryItem) RequestNlp(username string, content string) *domain.QueryResponse {
+	logger.Infof("[data.RegistryItem] RequestNlp enter for user:%s query: %s", username, content)
+
+	servicePart := item.StartRequest.Service
+	startId := item.StartRequest.TraceId
+	loadRuleUrl := strings.Join([]string{servicePart.ApiBaseURL, "/", constant.LoadGuideRuleURI}, "")
+
+	projectId, _ := strconv.Atoi(servicePart.ProjectId)
+	requestBody := domain.QueryRequest{
+		ProjectID: projectId,
+		Query:     content,
+		SessionID: strings.Join([]string{startId, username}, "-"),
+		TraceID:   strings.Join([]string{startId, uuid.NewString()}, "-"),
+	}
+
+	// Convert the request body to JSON
+	jsonBody, err := json.Marshal(requestBody)
+	logger.Infof("[data.RegistryItem] RequestNlp request with:%s", jsonBody)
+
+	if err != nil {
+		fmt.Println("Error:", err)
+		return nil
+	}
+
+	req, err := http.NewRequest("POST", loadRuleUrl, bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", servicePart.Authorization)
+	req.Header.Set("TenantId", servicePart.TenantId)
+	req.Header.Set("CustomTraceId", startId+uuid.NewString())
+
+	httpClient := &http.Client{}
+	resp, err := httpClient.Do(req)
+	bodyBytes, err := io.ReadAll(resp.Body)
+	defer resp.Body.Close()
+	responseBody := bodyBytes
+
+	response := &domain.QueryResponse{}
+	json.Unmarshal(responseBody, response)
+	logger.Infof("[data.RegistryItem] RequestNlp response with: %s", responseBody)
+
+	return response
 }
 
 func requestGetRule(traceId string, servicePart domain.ServiceStruct) (constant.ResponseStatus, *domain.RuleResponse) {

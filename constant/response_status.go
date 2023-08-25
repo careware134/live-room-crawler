@@ -23,4 +23,5 @@ const (
 	HeartbeatCheckInterval  = 15
 	LogRound                = 60
 	LoadGuideRuleURI        = "rule/guide/loadByProjectId"
+	QueryNlpURI             = "rule/chat/model/reply"
 )
