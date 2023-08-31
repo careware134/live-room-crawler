@@ -62,11 +62,11 @@ https://odd-card-01e.notion.site/web-socket-86f57165e3cd4ca09aaf056ec54ea414
       "type": "start",
       "trace_id": "xx",
       "target": {
-         "live_url" : "https://live.douyin.com/646379392926",
+         "live_url" : "https://live.douyin.com/653927404720",
          "platform": "douyin"
       },
       "service": {
-          "api_base_url": "https://aigc-video-dev.softsugar.com/aigc/live/live-api-dev",
+          "api_base_url": "https://aigc-video-dev.softsugar.com/aigc/live/live-api",
           "project_id": "1317",
           "tenant_id": "1673151231108915200",
           "authorization": "eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiJkZTgyOGJjYi0xM2U2LTRkYjgtYjNiMC00NTRhMDg0YjA0YzMiLCJPcmlnaW5hbFNvdXJjZSI6IlBDX0xJVkUiLCJzdWIiOiI2NDMyMTg1ODkiLCJleHAiOjE2OTQ1ODk0MjB9.0wYdi04d_owY7IQFNbBAYcfpEbFi_KSgIurgRi6Bikb4Xhsy7uaFG6eTicU1N7uxmPHldcwlFkmi_bSmLFE9xw"
@@ -80,3 +80,6 @@ https://odd-card-01e.notion.site/web-socket-86f57165e3cd4ca09aaf056ec54ea414
       "trace_id": "xx"
    }
    ```
+
+
+curl -X POST localhost:8080/nbcb/aigc/video/admin-nbcb/userManage/register -H "Content-Type: application/json" -D "{\"emai\":\"liwei9\",\"userName\":\"liwei9\",\"password\":\"s3cr3t12E\",\"nickName\":\"liwei9\"}"

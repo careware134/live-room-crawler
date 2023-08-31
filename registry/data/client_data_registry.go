@@ -94,6 +94,9 @@ func (r *EventDataRegistry) pushUserAction(client *websocket.Conn, registryItem 
 		if playMessage.Action != domain.ON_COMMENT {
 			continue
 		}
+		if !constant.PlayUserAction {
+			continue
+		}
 
 		item := r.registryItems[client]
 		queryResponse := item.RequestNlp(playMessage.Username, playMessage.Content)

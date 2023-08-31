@@ -98,15 +98,16 @@ func (item *RegistryItem) LoadRule(traceId string) constant.ResponseStatus {
 	ruleRegistry := item.RuleGroupList
 	for _, groupItem := range ruleResponse.DataList {
 		dictionary := groupItem.ConditionTypeDictionary
-		sort.Slice(groupItem.RuleList, func(i, j int) bool {
-			return groupItem.RuleList[i].Threshold > groupItem.RuleList[j].Threshold &&
-				groupItem.RuleList[i].DriverType > groupItem.RuleList[j].DriverType
-		})
-
 		// filter out all enabled rules
 		filteredList := funk.Filter(groupItem.RuleList, func(rule domain.Rule) bool {
 			return rule.Enable
 		}).([]domain.Rule)
+		// sort by Threshold, DriverType desc
+		sort.Slice(filteredList, func(i, j int) bool {
+			return filteredList[i].Threshold >= filteredList[j].Threshold &&
+				filteredList[i].DriverType > filteredList[j].DriverType
+		})
+
 		// load rules which only enabled
 		ruleRegistry[domain.CounterType(dictionary.Name)] = filteredList
 	}
@@ -242,7 +243,7 @@ func requestGetRule(traceId string, servicePart domain.ServiceStruct) (constant.
 	body := string(bodyBytes)
 
 	logger.Infof("LoadRule request url:%s with code %d result is: %s", loadRuleUrl, response.StatusCode, body)
-	if err != nil || response.StatusCode != 200 {
+	if err != nil || !util.IsInList(response.StatusCode, []int{200, 401, 403, 400}) {
 		return constant.LOAD_RULE_FAIL, nil
 	}
 
@@ -253,5 +254,5 @@ func requestGetRule(traceId string, servicePart domain.ServiceStruct) (constant.
 		return constant.LOAD_RULE_FAIL, nil
 	}
 
-	return constant.SUCCESS, &ruleResponse
+	return *ruleResponse.ResponseStatus, &ruleResponse
 }
