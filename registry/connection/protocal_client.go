@@ -152,6 +152,11 @@ func (client *LocalClient) onStart(request *domain.CommandRequest) *domain.Comma
 
 	// create connector by start request
 	connector := platform.NewConnector(request.Target, client.stopChan)
+	if connector == nil {
+		response.ResponseStatus = constant.UNKNOWN_PLATFORM
+		logger.Errorf("onStart fail with UNKNOWN_PLATFORM")
+		return response
+	}
 	client.Connector = &connector
 	info := connector.GetRoomInfo()
 	if info == nil {

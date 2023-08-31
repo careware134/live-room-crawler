@@ -85,8 +85,14 @@ func (c *ConnectorStrategy) StartListen(localConn *websocket.Conn) {
 func (c *ConnectorStrategy) Stop() {
 	c.IsStart = false
 	c.IsStop = true
-	c.conn.Close()
-	logger.Infof("♪[douyin.ConnectorStrategy] Stop douyin for url: %s titl: %s", c.liveUrl, c.RoomInfo.RoomTitle)
+	if c.conn != nil {
+		c.conn.Close()
+	}
+	title := ""
+	if c.RoomInfo != nil {
+		title = c.RoomInfo.RoomTitle
+	}
+	logger.Infof("♪[douyin.ConnectorStrategy] Stop douyin for url: %s title: %s", c.liveUrl, title)
 }
 
 func (c *ConnectorStrategy) IsAlive() bool {

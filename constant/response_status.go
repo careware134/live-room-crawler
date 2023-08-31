@@ -15,6 +15,7 @@ var (
 	CONNECTION_FAIL        = ResponseStatus{Success: false, Code: "CONNECTION_FAIL", Message: "直播平台连接失败！"}
 	LIVE_CONNECTION_CLOSED = ResponseStatus{Success: false, Code: "LIVE_CONNECTION_CLOSED", Message: "连接回收：心跳丢失或直播间关闭！"}
 	INVALID_LIVE_URL       = ResponseStatus{Success: false, Code: "INVALID_LIVE_URL", Message: "无效直播间地址，请确认！"}
+	UNKNOWN_PLATFORM       = ResponseStatus{Success: false, Code: "UNKNOWN_PLATFORM", Message: "未知直播间平台！"}
 )
 
 const (
