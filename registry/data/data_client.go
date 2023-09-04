@@ -228,7 +228,7 @@ func requestGetRule(traceId string, servicePart domain.ServiceStruct) (constant.
 
 	req, err := http.NewRequest("GET", loadRuleUrl, nil)
 	if err != nil {
-		return constant.LOAD_RULE_FAIL, nil
+		return constant.REQUEST_SERVER_FAILED, nil
 	}
 	// Set custom headers
 	req.Header.Set("Content-Type", "application/json")
@@ -244,7 +244,7 @@ func requestGetRule(traceId string, servicePart domain.ServiceStruct) (constant.
 
 	logger.Infof("LoadRule request url:%s with code %d result is: %s", loadRuleUrl, response.StatusCode, body)
 	if err != nil || !util.IsInList(response.StatusCode, []int{200, 401, 403, 400}) {
-		return constant.LOAD_RULE_FAIL, nil
+		return constant.REQUEST_SERVER_FAILED, nil
 	}
 
 	var ruleResponse domain.RuleResponse
