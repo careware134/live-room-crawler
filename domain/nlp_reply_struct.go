@@ -1,5 +1,7 @@
 package domain
 
+import "live-room-crawler/constant"
+
 type QueryRequest struct {
 	ProjectID int    `json:"projectId"`
 	Query     string `json:"query"`
@@ -20,6 +22,7 @@ type Skill struct {
 }
 
 type Meta struct {
+	UserName       string  `json:"user_name"`
 	Catchall       bool    `json:"catchall"`
 	Intent         string  `json:"intent"`
 	Confidence     float64 `json:"confidence"`
@@ -31,19 +34,13 @@ type Meta struct {
 	Skill          Skill   `json:"skill"`
 }
 
-type ResponseStatus struct {
-	Success bool   `json:"success"`
-	Code    string `json:"code"`
-	Message string `json:"message"`
-}
-
 type QueryResponse struct {
-	Trace          string         `json:"trace"`
-	Answer         string         `json:"answer"`
-	Text           string         `json:"text"`
-	Query          string         `json:"query"`
-	Meta           Meta           `json:"meta"`
-	ResponseStatus ResponseStatus `json:"responseStatus"`
+	Trace          string                  `json:"trace"`
+	Answer         string                  `json:"answer"`
+	Text           string                  `json:"text"`
+	Query          string                  `json:"query"`
+	Meta           Meta                    `json:"meta"`
+	ResponseStatus constant.ResponseStatus `json:"responseStatus"`
 }
 
 func (queryResponse *QueryResponse) ToPlayMessage() *CommandResponse {
@@ -61,6 +58,12 @@ func (queryResponse *QueryResponse) ToPlayMessage() *CommandResponse {
 			DrivenType: drivenType,
 			Text:       queryResponse.Text,
 			Audio:      queryResponse.Answer,
+		},
+		RuleMeta: RuleMeta{
+			Name:     queryResponse.Meta.TriggeredQuery,
+			Query:    queryResponse.Query,
+			UserName: queryResponse.Meta.UserName,
+			Type:     CHAT,
 		},
 	}
 	return response

@@ -21,6 +21,7 @@ import (
 )
 
 type RegistryItem struct {
+	stopChan          chan struct{} // Channel to signal stop
 	writeLock         sync.Mutex
 	countLock         sync.Mutex
 	conn              *websocket.Conn
@@ -30,6 +31,8 @@ type RegistryItem struct {
 	PlayDeque         *util.PlayDeque
 	Statistics        map[domain.CounterType]*domain.StatisticCounter
 	RuleGroupList     map[domain.CounterType][]domain.Rule
+	Project           *domain.Project
+	ChatAvail         bool
 }
 
 func (item *RegistryItem) CompareRule(counterType domain.CounterType, counter *domain.StatisticCounter) *domain.CommandResponse {
@@ -95,6 +98,12 @@ func (item *RegistryItem) LoadRule(traceId string) constant.ResponseStatus {
 	if ruleResponse.DataList != nil && len(ruleResponse.DataList) > 0 { // ? how if user clear his rules
 		item.RuleGroupList = make(map[domain.CounterType][]domain.Rule)
 	}
+	if ruleResponse.Project != nil {
+		item.Project = ruleResponse.Project
+		item.ChatAvail = ruleResponse.Project.NLPAppID != ""
+		logger.Infof("⚙️LoadRule update ChatAvail: %b, NLPAppId: %s", item.ChatAvail, ruleResponse.Project.NLPAppID)
+	}
+
 	ruleRegistry := item.RuleGroupList
 	for _, groupItem := range ruleResponse.DataList {
 		dictionary := groupItem.ConditionTypeDictionary
@@ -175,11 +184,13 @@ func (item *RegistryItem) WriteResponse(response *domain.CommandResponse) error 
 }
 
 func (item *RegistryItem) RequestNlp(username string, content string) *domain.QueryResponse {
-	logger.Infof("[data.RegistryItem] RequestNlp enter for user:%s query: %s", username, content)
+	item.writeLock.Lock()
+	defer item.writeLock.Unlock()
+	logger.Infof("🖥☎️[data.RegistryItem] RequestNlp enter for user:%s query: %s", username, content)
 
 	servicePart := item.StartRequest.Service
 	startId := item.StartRequest.TraceId
-	loadRuleUrl := strings.Join([]string{servicePart.ApiBaseURL, "/", constant.LoadGuideRuleURI}, "")
+	requestURL := strings.Join([]string{servicePart.ApiBaseURL, "/", constant.QueryNlpURI}, "")
 
 	projectId, _ := strconv.Atoi(servicePart.ProjectId)
 	requestBody := domain.QueryRequest{
@@ -191,30 +202,35 @@ func (item *RegistryItem) RequestNlp(username string, content string) *domain.Qu
 
 	// Convert the request body to JSON
 	jsonBody, err := json.Marshal(requestBody)
-	logger.Infof("[data.RegistryItem] RequestNlp request with:%s", jsonBody)
+	logger.Infof("🖥📞[data.RegistryItem] RequestNlp request traceId:%s with:%s", requestBody.TraceID, jsonBody)
 
 	if err != nil {
 		fmt.Println("Error:", err)
 		return nil
 	}
 
-	req, err := http.NewRequest("POST", loadRuleUrl, bytes.NewBuffer(jsonBody))
+	req, err := http.NewRequest("POST", requestURL, bytes.NewBuffer(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", servicePart.Authorization)
 	req.Header.Set("TenantId", servicePart.TenantId)
 	req.Header.Set("CustomTraceId", startId+uuid.NewString())
 
 	httpClient := &http.Client{}
-	resp, err := httpClient.Do(req)
-	bodyBytes, err := io.ReadAll(resp.Body)
-	defer resp.Body.Close()
+	response, err := httpClient.Do(req)
+	bodyBytes, err := io.ReadAll(response.Body)
+	defer response.Body.Close()
 	responseBody := bodyBytes
 
-	response := &domain.QueryResponse{}
-	json.Unmarshal(responseBody, response)
-	logger.Infof("[data.RegistryItem] RequestNlp response with: %s", responseBody)
+	logger.Infof("🖥📡[data.RegistryItem] RequestNlp response traceId:%s code:%d with:%s", requestBody.TraceID, response.StatusCode, responseBody)
+	queryResponse := &domain.QueryResponse{}
+	json.Unmarshal(responseBody, queryResponse)
+	if err != nil || !util.IsInList(response.StatusCode, []int{200, 401, 403, 400}) {
+		queryResponse.ResponseStatus = constant.UNKNOWN_NLP_RESPONSE
+		return queryResponse
+	}
 
-	return response
+	queryResponse.Meta.UserName = username
+	return queryResponse
 }
 
 func requestGetRule(traceId string, servicePart domain.ServiceStruct) (constant.ResponseStatus, *domain.RuleResponse) {

@@ -94,20 +94,21 @@ func (r *EventDataRegistry) pushUserAction(client *websocket.Conn, registryItem 
 		if playMessage.Action != domain.ON_COMMENT {
 			continue
 		}
-		if !constant.PlayUserAction {
+		if !registryItem.ChatAvail {
 			continue
 		}
-
 		item := r.registryItems[client]
 		queryResponse := item.RequestNlp(playMessage.Username, playMessage.Content)
-		if queryResponse == nil || queryResponse.Meta.Catchall {
-			logger.Infof("[EventDataRegistry]PushPlayMessage[🤐]skip for CHATCHALL to  query: %s connection: %s", playMessage.Content, client.RemoteAddr())
+		if queryResponse == nil ||
+			!queryResponse.ResponseStatus.Success ||
+			queryResponse.Meta.Catchall {
+			logger.Infof("🖥[EventDataRegistry]PushPlayMessageskip for CHATCHALL to query: %s connection: %s", playMessage.Content, client.RemoteAddr())
 			continue
 		}
 
 		message := queryResponse.ToPlayMessage()
 		marshal, _ := json.Marshal(playMessage)
-		logger.Infof("[EventDataRegistry]PushPlayMessage[🎬⚙️] chat message: %s connection: %s", marshal, client.RemoteAddr())
+		logger.Infof("🖥[EventDataRegistry]PushPlayMessage[🎬⚙️] chat message: %s connection: %s", marshal, client.RemoteAddr())
 		r.WriteResponse(client, message)
 	}
 }

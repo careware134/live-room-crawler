@@ -4,8 +4,20 @@ import "live-room-crawler/constant"
 
 type RuleResponse struct {
 	DataList       []RuleGroupItem          `json:"dataList"`
+	Project        *Project                 `json:"project"`
 	ResponseStatus *constant.ResponseStatus `json:"responseStatus,omitempty"`
 	Count          int                      `json:"count,omitempty"`
+}
+
+type Project struct {
+	ID             string `json:"id"`
+	Name           string `json:"name"`
+	UserID         string `json:"userId"`
+	TenantID       string `json:"tenantId"`
+	BackgroundID   string `json:"backgroundId"`
+	DigitalHumanID string `json:"digitalHumanId"`
+	NLPAppID       string `json:"nlpAppId"`
+	NLPSkillID     string `json:"nlpSkillId"`
 }
 
 type RuleGroupItem struct {

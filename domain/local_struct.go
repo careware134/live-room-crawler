@@ -91,6 +91,8 @@ type PlayContent struct {
 type RuleMeta struct {
 	Id        int64    `json:"id,omitempty"`
 	Name      string   `json:"name,omitempty"`
+	Query     string   `json:"query,omitempty"`
+	UserName  string   `json:"user_name,omitempty"`
 	Type      RuleType `json:"type,omitempty"`
 	Threshold int      `json:"threshold,omitempty"`
 	Enable    bool     `json:"enable,omitempty"`

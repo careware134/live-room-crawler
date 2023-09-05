@@ -64,7 +64,7 @@ func (c *ConnectorStrategy) parseMessage(msg *protostub.Message, dataRegistry *d
 	case "WebcastMemberMessage":
 		memberMessage := parseWebcastMemberMessage(msg.Payload)
 		dataRegistry.EnqueueAction(localConn, domain.UserActionEvent{
-			Action:    domain.ON_COMMENT,
+			Action:    domain.ON_ENTER,
 			Username:  memberMessage.GetUser().NickName,
 			Content:   memberMessage.GetUser().NickName + "加入了房间",
 			EventTime: time.Unix(int64(memberMessage.Common.CreateTime), 0),
@@ -77,7 +77,7 @@ func (c *ConnectorStrategy) parseMessage(msg *protostub.Message, dataRegistry *d
 		giftMessage := parseWebcastGiftMessage(msg.Payload)
 		dataRegistry.UpdateStatistics(localConn, domain.GIFT, domain.BuildStatisticsCounter(giftMessage.ComboCount, true))
 		dataRegistry.EnqueueAction(localConn, domain.UserActionEvent{
-			Action:    domain.ON_COMMENT,
+			Action:    domain.ON_GIFT,
 			Username:  giftMessage.GetUser().NickName,
 			Content:   giftMessage.Common.Describe,
 			EventTime: time.Unix(int64(giftMessage.Common.CreateTime), 0),
