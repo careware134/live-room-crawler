@@ -3,13 +3,11 @@ package douyin
 import (
 	"fmt"
 	"github.com/gorilla/websocket"
-	"github.com/spyzhov/ajson"
 	"io"
 	"live-room-crawler/constant"
 	"live-room-crawler/domain"
 	"live-room-crawler/util"
 	"net/http"
-	"net/url"
 	"regexp"
 	"strings"
 )
@@ -137,44 +135,12 @@ func (c *ConnectorStrategy) getRoomInfoByRequest() *domain.RoomInfo {
 	}
 
 	body := string(bodyBytes)
-	renderDataRegex := regexp.MustCompile(`<script id="RENDER_DATA" type="application/json">(.*?)</script>`)
-
-	regexGroup := renderDataRegex.FindStringSubmatch(body)
-	if len(regexGroup) < 2 {
-		fmt.Println("No render data found")
-		return nil
-	}
-	renderData := regexGroup[1]
-	renderData, err = url.QueryUnescape(renderData) // liveUrl.QueryUnescape(renderData)
-	if err != nil {
-		fmt.Println(err)
-		return nil
-	}
-
-	root, err := ajson.Unmarshal([]byte(renderData))
-	if err != nil {
-		panic(err)
-	}
-
-	// Retrieve the value of the "name" field using JSONPath
-	liveRoomIdNodes, err := root.JSONPath("$.app.initialState.roomStore.roomInfo.roomId")
-	if err != nil {
-		panic(err)
-	}
-
 	liveRoomId, liveRoomTitle, ttwid := "", "", ""
-	for _, node := range liveRoomIdNodes {
-		liveRoomId = node.MustString()
-		break
-	}
 
-	liveRoomTitleNodes, err := root.JSONPath("$.app.initialState.roomStore.roomInfo.room.title")
-	if err != nil {
-		panic(err)
-	}
-	for _, node := range liveRoomTitleNodes {
-		liveRoomTitle = node.MustString()
-		break
+	regex := regexp.MustCompile(`roomId\\":\\"(\d+)\\"`)
+	match := regex.FindStringSubmatch(body)
+	if len(match) > 1 {
+		liveRoomId = match[1]
 	}
 
 	data := resp.Cookies()
