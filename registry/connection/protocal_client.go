@@ -124,7 +124,8 @@ func (client *LocalClient) setPingHandler() {
 		clientRegistry.UpdateHeartBeat(conn)
 		// response with pong
 		err := dataRegistry.WriteResponse(conn, &domain.CommandResponse{
-			CommandType: domain.PONG,
+			CommandType:    domain.PONG,
+			ResponseStatus: constant.SUCCESS,
 		})
 		if err != nil {
 			logger.Errorf("PingHandler fail to WriteMessage Pong for conn:%s error:%e", conn.RemoteAddr(), err)
