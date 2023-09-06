@@ -3,12 +3,12 @@ package douyin
 import (
 	"fmt"
 	"github.com/gorilla/websocket"
+	"github.com/spyzhov/ajson"
 	"io"
 	"live-room-crawler/constant"
 	"live-room-crawler/domain"
 	"live-room-crawler/util"
 	"net/http"
-	"regexp"
 	"strings"
 )
 
@@ -130,17 +130,57 @@ func (c *ConnectorStrategy) getRoomInfoByRequest() *domain.RoomInfo {
 
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println(err)
+		logger.Errorf("[douyin.connector]getRoomInfoByRequest error when read body: %e", err)
 		return nil
 	}
 
 	body := string(bodyBytes)
 	liveRoomId, liveRoomTitle, ttwid := "", "", ""
 
-	regex := regexp.MustCompile(`roomId\\":\\"(\d+)\\"`)
-	match := regex.FindStringSubmatch(body)
-	if len(match) > 1 {
-		liveRoomId = match[1]
+	//regex := regexp.MustCompile(`roomId\\":\\"(\d+)\\"`)
+	//match := regex.FindStringSubmatch(body)
+	//if len(match) > 1 {
+	//	liveRoomId = match[1]
+	//}
+
+	startIndex := strings.LastIndex(body, RoomInfoJsonStartTag1)
+	if startIndex < 0 {
+		startIndex = strings.LastIndex(body, RoomInfoJsonStartTag2)
+	}
+	if startIndex < 0 {
+		logger.Errorf("[douyin.connector]getRoomInfoByRequest fail to find roomInfo json: %e", err)
+		return nil
+	}
+
+	jsonNotEnding := body[startIndex:]
+	startIndex = strings.Index(jsonNotEnding, "{")
+	roomInfoJson := util.FindJsonString(jsonNotEnding, startIndex)
+
+	root, err := ajson.Unmarshal([]byte(roomInfoJson))
+	if err != nil {
+		logger.Errorf("[douyin.connector]getRoomInfoByRequest error when Unmarshal Json: %e", err)
+		return nil
+	}
+
+	// Retrieve the value of the "name" field using JSONPath
+	liveRoomIdNodes, err := root.JSONPath("$.room.id_str")
+	if err != nil {
+		logger.Errorf("[douyin.connector]getRoomInfoByRequest error when find liveRoomId: %e", err)
+		return nil
+	}
+
+	for _, node := range liveRoomIdNodes {
+		liveRoomId = node.MustString()
+		break
+	}
+
+	liveRoomTitleNodes, err := root.JSONPath("$.room.title")
+	if err != nil {
+		logger.Warnf("[douyin.connector]getRoomInfoByRequest error when find liveRoomTitleNodes: %e", err)
+	}
+	for _, node := range liveRoomTitleNodes {
+		liveRoomTitle = node.MustString()
+		break
 	}
 
 	data := resp.Cookies()

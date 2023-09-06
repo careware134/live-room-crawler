@@ -5,7 +5,6 @@ import (
 	"github.com/gorilla/websocket"
 	cors "github.com/rs/cors/wrapper/gin"
 	"live-room-crawler/registry/connection"
-	"live-room-crawler/registry/data"
 	"live-room-crawler/util"
 	"net/http"
 	"strconv"
@@ -16,10 +15,10 @@ var logger = util.Logger()
 func StartLocalServer(port int) {
 	// get registry instance
 	clientRegistry := connection.GetClientRegistry()
-	dataRegistry := data.GetDataRegistry()
+	// dataRegistry := data.GetDataRegistry()
 
 	go clientRegistry.StartHeartbeatsCheck()
-	go dataRegistry.StartPushPlayMessage()
+	// go dataRegistry.StartPushPlayMessage() // move this block to dataRegistry.MarkReady
 
 	// Define a handler function for WebSocket connections
 	// Register the handler function for requests to the "/ws" path

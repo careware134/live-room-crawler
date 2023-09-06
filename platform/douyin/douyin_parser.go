@@ -62,13 +62,13 @@ func (c *ConnectorStrategy) parseMessage(msg *protostub.Message, dataRegistry *d
 		likeMessage := parseWebcastLikeMessage(msg.Payload)
 		dataRegistry.UpdateStatistics(localConn, domain.LIKE, domain.BuildStatisticsCounter(likeMessage.Total, false))
 	case "WebcastMemberMessage":
-		memberMessage := parseWebcastMemberMessage(msg.Payload)
-		dataRegistry.EnqueueAction(localConn, domain.UserActionEvent{
-			Action:    domain.ON_ENTER,
-			Username:  memberMessage.GetUser().NickName,
-			Content:   memberMessage.GetUser().NickName + "加入了房间",
-			EventTime: time.Unix(int64(memberMessage.Common.CreateTime), 0),
-		})
+		parseWebcastMemberMessage(msg.Payload)
+		//dataRegistry.EnqueueAction(localConn, domain.UserActionEvent{
+		//	Action:    domain.ON_ENTER,
+		//	Username:  memberMessage.GetUser().NickName,
+		//	Content:   memberMessage.GetUser().NickName + "加入了房间",
+		//	EventTime: time.Unix(int64(memberMessage.Common.CreateTime), 0),
+		//})
 	case "WebcastGiftMessage":
 		// 礼物消息WebcastGiftMessage; gift,3
 		// .repeatCount 	"repeatCount": 10,
@@ -76,12 +76,12 @@ func (c *ConnectorStrategy) parseMessage(msg *protostub.Message, dataRegistry *d
 		// .domain.describe e.g 		"describe": "长孙明亮:送给主播 10个你最好看",
 		giftMessage := parseWebcastGiftMessage(msg.Payload)
 		dataRegistry.UpdateStatistics(localConn, domain.GIFT, domain.BuildStatisticsCounter(giftMessage.ComboCount, true))
-		dataRegistry.EnqueueAction(localConn, domain.UserActionEvent{
-			Action:    domain.ON_GIFT,
-			Username:  giftMessage.GetUser().NickName,
-			Content:   giftMessage.Common.Describe,
-			EventTime: time.Unix(int64(giftMessage.Common.CreateTime), 0),
-		})
+		//dataRegistry.EnqueueAction(localConn, domain.UserActionEvent{
+		//	Action:    domain.ON_GIFT,
+		//	Username:  giftMessage.GetUser().NickName,
+		//	Content:   giftMessage.Common.Describe,
+		//	EventTime: time.Unix(int64(giftMessage.Common.CreateTime), 0),
+		//})
 	case "WebcastChatMessage":
 		// comment,6
 		chatMessage := parseWebcastChatMessage(msg.Payload)
@@ -154,7 +154,7 @@ func parseWebcastChatMessage(data []byte) *protostub.ChatMessage {
 	var dataMap map[string]interface{}
 	json.Unmarshal(jsonData, &dataMap)
 	log := string(jsonData)
-	logger.Info("[parseWebcastChatMessage] [✉️直播间弹幕评论]｜", log)
+	logger.Info("⚛️⚛️⚛️✉️✉️✉️✉️✉️[parseWebcastChatMessage] [✉️直播间弹幕评论]｜", log)
 	return chatMessage
 }
 

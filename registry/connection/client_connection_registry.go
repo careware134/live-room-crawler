@@ -60,7 +60,7 @@ func (r *ClientConnectionRegistry) MarkReady(
 	r.heartbeatLostRegistry[client] = 0
 
 	dataRegistry := data.GetDataRegistry()
-	dataRegistry.MarkReady(client, startRequest, roomInfo)
+	dataRegistry.MarkReady(client, startRequest, roomInfo, localClient.stopChan)
 }
 
 func (r *ClientConnectionRegistry) UpdateHeartBeat(client *websocket.Conn) {

@@ -85,6 +85,7 @@ func main() {
 	}
 
 	if serverMode {
+		logger.Infof("version:1.3.1 add chat guide interaction")
 		server.StartLocalServer(port)
 	}
 

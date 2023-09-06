@@ -18,6 +18,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 type RegistryItem struct {
@@ -148,7 +149,9 @@ func (item *RegistryItem) EnqueueAction(actionEvent domain.UserActionEvent) {
 	item.writeLock.Lock()
 	defer item.writeLock.Unlock()
 	marshal, _ := json.Marshal(actionEvent)
-	logger.Infof("EnqueueAction invoked connection addr:%s event:%s", item.conn.RemoteAddr(), marshal)
+	size := item.PlayDeque.Size()
+
+	logger.Infof("EnqueueAction invoked connection addr:%s size now:%d event:%s", item.conn.RemoteAddr(), size, marshal)
 
 	if item != nil {
 		item.PlayDeque.PushBack(actionEvent)
@@ -160,9 +163,10 @@ func (item *RegistryItem) DequeueAction() *domain.UserActionEvent {
 	defer item.writeLock.Unlock()
 
 	front := item.PlayDeque.PopFront()
+	size := item.PlayDeque.Size()
 
 	marshal, _ := json.Marshal(front)
-	logger.Infof("DequeueAction invoked connection addr:%s event:%s", item.conn.RemoteAddr(), marshal)
+	logger.Infof("DequeueAction invoked connection addr:%s size now:%d event:%s", item.conn.RemoteAddr(), size, marshal)
 	return front
 }
 
@@ -184,8 +188,6 @@ func (item *RegistryItem) WriteResponse(response *domain.CommandResponse) error 
 }
 
 func (item *RegistryItem) RequestNlp(username string, content string) *domain.QueryResponse {
-	item.writeLock.Lock()
-	defer item.writeLock.Unlock()
 	logger.Infof("🖥☎️[data.RegistryItem] RequestNlp enter for user:%s query: %s", username, content)
 
 	servicePart := item.StartRequest.Service
@@ -271,4 +273,56 @@ func requestGetRule(traceId string, servicePart domain.ServiceStruct) (constant.
 	}
 
 	return *ruleResponse.ResponseStatus, &ruleResponse
+}
+
+// StartPushPlayMessage 循环检查play队列，出队并推送
+func (item *RegistryItem) StartPushPlayMessage() {
+	logger.Infof("[data.RegistryItem]start StartPushPlayMessage[🎬] enter...")
+
+	round := 0
+	for {
+		select {
+		case <-item.stopChan:
+			// Stop signal received, exit the goroutine
+			logger.Infof("⚓️[RegistryItem]break StartPushPlayMessage by client.stopChan for client: %s", item.conn.RemoteAddr())
+			return
+		default:
+			if round%constant.LogRound == 0 {
+				readyClientCount := GetDataRegistry().Size()
+				logger.Infof("[data.RegistryItem]start StartPushPlayMessage[🎬] checking....ready clients readyClientCount: %d", readyClientCount)
+				round = 0
+			}
+			item.pushUserAction()
+			// Sleep for PlayDequeuePushInterval(=1 by default) seconds
+			time.Sleep(constant.PlayDequeuePushInterval * time.Second)
+			round++
+		}
+	}
+}
+
+// pop action queue and query NLP to try get a response
+func (item *RegistryItem) pushUserAction() {
+	for !item.PlayDeque.IsEmpty() {
+		playMessage := item.DequeueAction()
+		if playMessage.Action != domain.ON_COMMENT {
+			continue
+		}
+		if !item.ChatAvail {
+			continue
+		}
+
+		client := item.conn
+		queryResponse := item.RequestNlp(playMessage.Username, playMessage.Content)
+		if queryResponse == nil ||
+			!queryResponse.ResponseStatus.Success ||
+			queryResponse.Meta.Catchall {
+			logger.Infof("🖥[data.RegistryItem]PushPlayMessageskip for CHATCHALL to query: %s connection: %s", playMessage.Content, client.RemoteAddr())
+			continue
+		}
+
+		message := queryResponse.ToPlayMessage()
+		marshal, _ := json.Marshal(playMessage)
+		logger.Infof("🖥[data.RegistryItem]PushPlayMessage[🎬⚙️] chat message: %s connection: %s", marshal, client.RemoteAddr())
+		item.WriteResponse(message)
+	}
 }
