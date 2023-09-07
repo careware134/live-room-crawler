@@ -9,13 +9,13 @@ import (
 	"google.golang.org/protobuf/proto"
 	"io"
 	"live-room-crawler/domain"
-	"live-room-crawler/platform/douyin/protostub"
+	"live-room-crawler/platform/douyin/douyin_protostub"
 	"live-room-crawler/registry/data"
 	"time"
 )
 
 func (c *ConnectorStrategy) OnMessage(message []byte, conn *websocket.Conn, localConn *websocket.Conn) {
-	wssPackage := &protostub.PushFrame{}
+	wssPackage := &douyin_protostub.PushFrame{}
 	proto.Unmarshal(message, wssPackage)
 	dataRegistry := data.GetDataRegistry()
 
@@ -26,7 +26,7 @@ func (c *ConnectorStrategy) OnMessage(message []byte, conn *websocket.Conn, loca
 	}
 	defer gzipReader.Close()
 
-	payloadPackage := &protostub.Response{}
+	payloadPackage := &douyin_protostub.Response{}
 	data, err := io.ReadAll(gzipReader)
 
 	err = proto.Unmarshal(data, payloadPackage)
@@ -52,7 +52,7 @@ func (c *ConnectorStrategy) OnMessage(message []byte, conn *websocket.Conn, loca
 	}
 }
 
-func (c *ConnectorStrategy) parseMessage(msg *protostub.Message, dataRegistry *data.EventDataRegistry, localConn *websocket.Conn) {
+func (c *ConnectorStrategy) parseMessage(msg *douyin_protostub.Message, dataRegistry *data.EventDataRegistry, localConn *websocket.Conn) {
 	switch msg.Method {
 	case "WebcastMatchAgainstScoreMessage":
 		parseMatchAgainstScoreMessage(msg.Payload)
@@ -114,8 +114,8 @@ func (c *ConnectorStrategy) parseMessage(msg *protostub.Message, dataRegistry *d
 	}
 }
 
-func parseWebcastMemberMessage(payload []byte) *protostub.MemberMessage {
-	chatMessage := &protostub.MemberMessage{}
+func parseWebcastMemberMessage(payload []byte) *douyin_protostub.MemberMessage {
+	chatMessage := &douyin_protostub.MemberMessage{}
 	proto.Unmarshal(payload, chatMessage)
 	jsonData, _ := json.Marshal(chatMessage)
 	var dataMap map[string]interface{}
@@ -125,8 +125,8 @@ func parseWebcastMemberMessage(payload []byte) *protostub.MemberMessage {
 	return chatMessage
 }
 
-func parseWebcastLikeMessage(payload []byte) *protostub.LikeMessage {
-	chatMessage := &protostub.LikeMessage{}
+func parseWebcastLikeMessage(payload []byte) *douyin_protostub.LikeMessage {
+	chatMessage := &douyin_protostub.LikeMessage{}
 	proto.Unmarshal(payload, chatMessage)
 	jsonData, _ := json.Marshal(chatMessage)
 	var dataMap map[string]interface{}
@@ -136,8 +136,8 @@ func parseWebcastLikeMessage(payload []byte) *protostub.LikeMessage {
 	return chatMessage
 }
 
-func parseMatchAgainstScoreMessage(payload []byte) *protostub.MatchAgainstScoreMessage {
-	chatMessage := &protostub.MatchAgainstScoreMessage{}
+func parseMatchAgainstScoreMessage(payload []byte) *douyin_protostub.MatchAgainstScoreMessage {
+	chatMessage := &douyin_protostub.MatchAgainstScoreMessage{}
 	proto.Unmarshal(payload, chatMessage)
 	jsonData, _ := json.Marshal(chatMessage)
 	var dataMap map[string]interface{}
@@ -147,8 +147,8 @@ func parseMatchAgainstScoreMessage(payload []byte) *protostub.MatchAgainstScoreM
 	return chatMessage
 }
 
-func parseWebcastChatMessage(data []byte) *protostub.ChatMessage {
-	chatMessage := &protostub.ChatMessage{}
+func parseWebcastChatMessage(data []byte) *douyin_protostub.ChatMessage {
+	chatMessage := &douyin_protostub.ChatMessage{}
 	proto.Unmarshal(data, chatMessage)
 	jsonData, _ := json.Marshal(chatMessage)
 	var dataMap map[string]interface{}
@@ -158,8 +158,8 @@ func parseWebcastChatMessage(data []byte) *protostub.ChatMessage {
 	return chatMessage
 }
 
-func parseWebcastGiftMessage(data []byte) *protostub.GiftMessage {
-	giftMessage := &protostub.GiftMessage{}
+func parseWebcastGiftMessage(data []byte) *douyin_protostub.GiftMessage {
+	giftMessage := &douyin_protostub.GiftMessage{}
 	proto.Unmarshal(data, giftMessage)
 	jsonData, _ := json.Marshal(giftMessage)
 	var dataMap map[string]interface{}
@@ -169,8 +169,8 @@ func parseWebcastGiftMessage(data []byte) *protostub.GiftMessage {
 	return giftMessage
 }
 
-func parseWebcastCommonTextMessage(data []byte) *protostub.CommonTextMessage {
-	commonTextMessage := &protostub.CommonTextMessage{}
+func parseWebcastCommonTextMessage(data []byte) *douyin_protostub.CommonTextMessage {
+	commonTextMessage := &douyin_protostub.CommonTextMessage{}
 	err := proto.Unmarshal(data, commonTextMessage)
 	if err != nil {
 		// Handle error
@@ -186,8 +186,8 @@ func parseWebcastCommonTextMessage(data []byte) *protostub.CommonTextMessage {
 	return commonTextMessage
 }
 
-func parseWebcastUpdateFanTicketMessage(data []byte) *protostub.UpdateFanTicketMessage {
-	updateFanTicketMessage := &protostub.UpdateFanTicketMessage{}
+func parseWebcastUpdateFanTicketMessage(data []byte) *douyin_protostub.UpdateFanTicketMessage {
+	updateFanTicketMessage := &douyin_protostub.UpdateFanTicketMessage{}
 	err := proto.Unmarshal(data, updateFanTicketMessage)
 	if err != nil {
 		// Handle error
@@ -209,8 +209,8 @@ func parseWebcastUpdateFanTicketMessage(data []byte) *protostub.UpdateFanTicketM
 	return updateFanTicketMessage
 }
 
-func parseWebcastRoomUserSeqMessage(data []byte) *protostub.RoomUserSeqMessage {
-	roomUserSeqMessage := &protostub.RoomUserSeqMessage{}
+func parseWebcastRoomUserSeqMessage(data []byte) *douyin_protostub.RoomUserSeqMessage {
+	roomUserSeqMessage := &douyin_protostub.RoomUserSeqMessage{}
 	err := proto.Unmarshal(data, roomUserSeqMessage)
 	if err != nil {
 		// Handle error
@@ -226,8 +226,8 @@ func parseWebcastRoomUserSeqMessage(data []byte) *protostub.RoomUserSeqMessage {
 	return roomUserSeqMessage
 }
 
-func parseWebcastSocialMessage(data []byte) *protostub.SocialMessage {
-	socialMessage := &protostub.SocialMessage{}
+func parseWebcastSocialMessage(data []byte) *douyin_protostub.SocialMessage {
+	socialMessage := &douyin_protostub.SocialMessage{}
 	err := proto.Unmarshal(data, socialMessage)
 	if err != nil {
 		// Handle error
@@ -250,7 +250,7 @@ func parseWebcastSocialMessage(data []byte) *protostub.SocialMessage {
 }
 
 func sendAck(ws *websocket.Conn, logId uint64, internalExt string) {
-	obj := &protostub.PushFrame{
+	obj := &douyin_protostub.PushFrame{
 		//PayloadType: "ack",
 		LogId:       logId,
 		PayloadType: internalExt,

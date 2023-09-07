@@ -1,6 +1,6 @@
 module live-room-crawler
 
-go 1.18
+go 1.19
 
 require (
 	bitbucket.org/neiku/winornot v0.0.4

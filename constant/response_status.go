@@ -22,7 +22,6 @@ var (
 )
 
 const (
-	PlayUserAction          = false
 	PlayDequeuePushInterval = 1
 	HeartbeatCheckInterval  = 15
 	LogRound                = 60

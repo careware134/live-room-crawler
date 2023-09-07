@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package douyin;
 
-option go_package = "./protostub";
+option go_package = "./douyin_protostub";
 
 message Response {
   repeated Message messagesList = 1;

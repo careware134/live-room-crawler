@@ -4,7 +4,7 @@
 // 	protoc        v3.20.3
 // source: douyin.proto
 
-package protostub
+package douyin_protostub
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
