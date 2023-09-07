@@ -46,7 +46,6 @@ func (t *ConnectorStrategy) GetLiveRoomId() (string, error) {
 	req.Header.Add("Accept", HeaderAcceptValue)
 	req.Header.Add("User-Agent", HeaderAgentValue)
 	req.Header.Add("Postman-Token", uuid.NewString())
-	//req.Header.Add("Cookie", HeaderCookieValue2)
 	req.Header.Add("Cookie", HeaderCookieValue)
 	req.Header.Add("Cache-Control", "no-cache")
 
