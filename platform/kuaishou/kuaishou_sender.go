@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func (c *ConnectorStrategy) SendMsg(content string, liveStreamID string, color string) interface{} {
+func (connector *ConnectorStrategy) SendMsg(content string, liveStreamID string, color string) interface{} {
 	variables := map[string]interface{}{
 		"color":        color,
 		"content":      content,
@@ -21,10 +21,10 @@ func (c *ConnectorStrategy) SendMsg(content string, liveStreamID string, color s
 			__typename
 		}
 	}`
-	return c.liveGraphql("SendLiveComment", variables, query, map[string]string{})
+	return connector.liveGraphql("SendLiveComment", variables, query, map[string]string{})
 }
 
-func (c *ConnectorStrategy) Follow(principalID string, followType int) interface{} {
+func (connector *ConnectorStrategy) Follow(principalID string, followType int) interface{} {
 	variables := map[string]interface{}{
 		"principalId": principalID,
 		"type":        followType,
@@ -35,10 +35,10 @@ func (c *ConnectorStrategy) Follow(principalID string, followType int) interface
 			__typename
 		}
 	}`
-	return c.liveGraphql("UserFollow", variables, query, map[string]string{})
+	return connector.liveGraphql("UserFollow", variables, query, map[string]string{})
 }
 
-func (c *ConnectorStrategy) GetUserCardInfoByID(principalID string) interface{} {
+func (connector *ConnectorStrategy) GetUserCardInfoByID(principalID string) interface{} {
 	variables := map[string]interface{}{
 		"principalId": principalID,
 		"count":       3,
@@ -71,18 +71,18 @@ func (c *ConnectorStrategy) GetUserCardInfoByID(principalID string) interface{} 
 			__typename
 		}
 	}`
-	return c.liveGraphql("UserCardInfoById", variables, query, map[string]string{})
+	return connector.liveGraphql("UserCardInfoById", variables, query, map[string]string{})
 }
 
-func (c *ConnectorStrategy) GetAllGifts() interface{} {
+func (connector *ConnectorStrategy) GetAllGifts() interface{} {
 	variables := map[string]interface{}{}
 	query := `query AllGifts {
 		allGifts
 	}`
-	return c.liveGraphql("AllGifts", variables, query, map[string]string{})
+	return connector.liveGraphql("AllGifts", variables, query, map[string]string{})
 }
 
-func (c *ConnectorStrategy) liveGraphql(operationName string, variables map[string]interface{}, query string, headers map[string]string) interface{} {
+func (connector *ConnectorStrategy) liveGraphql(operationName string, variables map[string]interface{}, query string, headers map[string]string) interface{} {
 
 	data := map[string]interface{}{
 		"operationName": operationName,
@@ -97,7 +97,7 @@ func (c *ConnectorStrategy) liveGraphql(operationName string, variables map[stri
 
 	// request room liveUrl
 	req, err := http.NewRequest("POST", KuaishouApiHost, bytes.NewBuffer(payload))
-	req.Header = c.Headers
+	req.Header = connector.ExtensionInfo.Headers
 	req.Header["Content-Type"] = []string{"application/json"}
 	if err != nil {
 		fmt.Println(err)
@@ -124,7 +124,7 @@ func (c *ConnectorStrategy) liveGraphql(operationName string, variables map[stri
 	return response
 }
 
-func (c *ConnectorStrategy) unHex(data string) string {
+func (connector *ConnectorStrategy) unHex(data string) string {
 	// 示例数据
 	// data = 'E5 8C 97 E6 99 A8 E7 9A 84 E4 BF A1 E6 99 BA EF BC 88 E5 B7 B2 E7 B4 AB'
 	data = strings.ReplaceAll(data, " ", "")

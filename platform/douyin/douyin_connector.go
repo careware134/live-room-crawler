@@ -34,7 +34,7 @@ func NewInstance(liveUrl string, stopChan chan struct{}) *ConnectorStrategy {
 	}
 }
 
-func (c *ConnectorStrategy) Connect(localConn *websocket.Conn) constant.ResponseStatus {
+func (c *ConnectorStrategy) Connect() constant.ResponseStatus {
 	roomInfo := c.GetRoomInfo()
 	if roomInfo == nil {
 		logger.Infof("♪ [douyin.ConnectorStrategy] Start douyin fail for url: %s", c.liveUrl)

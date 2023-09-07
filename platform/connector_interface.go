@@ -5,12 +5,13 @@ import (
 	"live-room-crawler/constant"
 	"live-room-crawler/domain"
 	"live-room-crawler/platform/douyin"
+	"live-room-crawler/platform/kuaishou"
 )
 
 type IPlatformConnectorStrategy interface {
 	GetRoomInfo() *domain.RoomInfo
 
-	Connect(localConn *websocket.Conn) constant.ResponseStatus
+	Connect() constant.ResponseStatus
 
 	StartListen(localConn *websocket.Conn)
 
@@ -22,6 +23,9 @@ type IPlatformConnectorStrategy interface {
 func NewConnector(targetStruct domain.TargetStruct, stopChan chan struct{}) IPlatformConnectorStrategy {
 	if targetStruct.Platform == domain.DOUYIN {
 		return douyin.NewInstance(targetStruct.LiveURL, stopChan)
+	}
+	if targetStruct.Platform == domain.KUAISHOU {
+		return kuaishou.NewInstance(targetStruct.LiveURL, stopChan)
 	}
 	return nil
 }

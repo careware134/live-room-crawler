@@ -5,13 +5,10 @@ import (
 	"flag"
 	"fmt"
 	"github.com/1set/gut/yos"
-	"io/ioutil"
 	"live-room-crawler/domain"
 	"live-room-crawler/platform"
-	"live-room-crawler/platform/kuaishou"
 	"live-room-crawler/server"
 	"live-room-crawler/util"
-	"net/http"
 )
 
 var (
@@ -27,7 +24,7 @@ var (
 // https://go.dev/doc/faq#virus
 // https://github.com/binganao/golang-shellcode-bypassav/blob/main/main.go
 // https://github.com/TideSec/GoBypassAV
-func main1() {
+func main() {
 	util.InitLog()
 	logger := util.Logger()
 
@@ -84,7 +81,7 @@ func main1() {
 			LiveURL:  liveUrl,
 		}, make(chan struct{}))
 
-		platformConnector.Connect(nil)
+		platformConnector.Connect()
 		go platformConnector.StartListen(nil)
 		fmt.Scanln() // Wait for user input
 
@@ -95,45 +92,4 @@ func main1() {
 		server.StartLocalServer(port)
 	}
 
-}
-
-func main2() {
-
-	ks := kuaishou.ConnectorStrategy{}
-	//c := "clientid=3; didv=1675056349580; userId=845495460; kuaishou.live.bfb1s=7206d814e5c089a58c910ed8bf52ace5; did=web_a41c846314016ca1a260444bb3c7d66c; client_key=65890b29; kpn=GAME_ZONE; _did=web_117262730815E9F7; kuaishou.live.web_st=ChRrdWFpc2hvdS5saXZlLndlYi5zdBKgAQkoEnsRiD0ovFwIQ828tvYMhmH6rThiUxM-uuTQtXKjmQEry1dCvI5sEsH9SZt9LNWcvJ_kNRPH2AFvS1awpa65z-Jpe3p2nbMvkpraiJV0WkJrvhLrCyb_CTCNPBGoYwUBaDoabrmZLqLJX-txGbrmUDIblQmR-MKwbPb7uQ5MszR2O3jaon_MtIrqnQA7e0IOBVmJT8N_p-lsiclN4NsaEsa__TMaP0jJgfAfW0kccZcKPyIgmgfFxb6YcCH2fKNK5CO2G4OWyK-WxFeXx6Bx8LA1FGcoBTAB; kuaishou.live.web_ph=8d652450751eaf1d2b61edf08b812bb0a41a; userId=845495460; ksliveShowClipTip=true"
-
-	ks.Init("https://live.kuaishou.com/u/3xdest4xjse3xr4")
-
-	// Start KsLive ws client
-	ks.WssServerStart()
-}
-
-func main() {
-	url := "https://live.kuaishou.com/u/zy8994520"
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		fmt.Println("Failed to create HTTP request:", err)
-		return
-	}
-
-	req.Header.Add("Accept", kuaishou.HeaderAcceptValue)
-	req.Header.Add("User-Agent", kuaishou.HeaderAgentValue)
-	req.Header.Add("Cookie", kuaishou.HeaderCookieValue)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Println("Failed to send HTTP request:", err)
-		return
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Failed to read response body:", err)
-		return
-	}
-
-	fmt.Println(string(body))
 }

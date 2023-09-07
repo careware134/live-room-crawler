@@ -168,7 +168,7 @@ func (client *LocalClient) onStart(request *domain.CommandRequest) *domain.Comma
 
 	// 0. invoke connect to prepare listen
 	response.Room = *info
-	responseStatus := connector.Connect(client.Conn)
+	responseStatus := connector.Connect()
 	if !responseStatus.Success {
 		response.ResponseStatus = responseStatus
 		return response
