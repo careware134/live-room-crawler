@@ -3,7 +3,6 @@ package kuaishou
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/spyzhov/ajson"
 	"google.golang.org/protobuf/proto"
@@ -45,9 +44,11 @@ func (t *ConnectorStrategy) GetLiveRoomId() (string, error) {
 	req.Header = http.Header{}
 	req.Header.Add("Accept", HeaderAcceptValue)
 	req.Header.Add("User-Agent", HeaderAgentValue)
-	req.Header.Add("Postman-Token", uuid.NewString())
+	//req.Header.Add("Postman-Token", uuid.NewString())
 	req.Header.Add("Cookie", HeaderCookieValue)
 	req.Header.Add("Cache-Control", "no-cache")
+	//req.Header.Add("Accept-Language", "zh-CN,zh;q=0.9")
+	//req.Header.Add("Sec-Ch-Ua", "\"Chromium\";v=\"116\", \"Not)A;Brand\";v=\"24\", \"Google Chrome\";v=\"116\"")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
