@@ -82,7 +82,7 @@ func (connector *ConnectorStrategy) Connect() constant.ResponseStatus {
 func (connector *ConnectorStrategy) GetRoomInfo() *domain.RoomInfo {
 	if connector.RoomInfo != nil {
 		marshal, _ := json.Marshal(connector.RoomInfo)
-		log.Infof("[kuaishou.connnector]GetRoomInfo SKIP for ALREADY have value:%s", marshal)
+		logger.Infof("[kuaishou.connnector]GetRoomInfo SKIP for ALREADY have value:%s", marshal)
 		return connector.RoomInfo
 	}
 
@@ -150,22 +150,22 @@ func (connector *ConnectorStrategy) GetLiveRoomId() (string, string, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Infof("[kuaishou.connector]Failed to send HTTP request:%e", err)
+		logger.Infof("[kuaishou.connector]Failed to send HTTP request:%e", err)
 		return "", "", fmt.Errorf(constant.INVALID_LIVE_URL.Code)
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) { _ = Body.Close() }(resp.Body)
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Errorf("[kuaishou.connector]getRoomInfoByRequest error when read body: %e", err)
 		return "", "", err
 	}
 
-	regexp := regexp.MustCompile(RoomInfoRegExp)
+	regExp := regexp.MustCompile(RoomInfoRegExp)
 	bodyString := string(bodyBytes)
-	jsonMatches := regexp.FindStringSubmatch(bodyString)
+	jsonMatches := regExp.FindStringSubmatch(bodyString)
 	jsonData := jsonMatches[1]
-	log.Infof("[kuaishou.connector]roomData: %s", jsonData)
+	logger.Infof("[kuaishou.connector]roomData: %s", jsonData)
 
 	root, err := ajson.Unmarshal([]byte(jsonData))
 	liveRoomIdNodes, err := root.JSONPath("$.liveroom.liveStream.id")
@@ -175,7 +175,7 @@ func (connector *ConnectorStrategy) GetLiveRoomId() (string, string, error) {
 		break
 	}
 
-	liveCaptionNodes, err := root.JSONPath("$.liveroom.liveStream.id")
+	liveCaptionNodes, err := root.JSONPath("$.liveroom.liveStream.caption")
 	liveRoomCaption := ""
 	for _, node := range liveCaptionNodes {
 		liveRoomCaption = node.MustString()
@@ -210,7 +210,7 @@ func (connector *ConnectorStrategy) GetWebSocketInfo(liveRoomId string) error {
 		return fmt.Errorf(constant.INVALID_LIVE_URL.Code)
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) { _ = Body.Close() }(resp.Body)
 	bodyBytes, err := io.ReadAll(resp.Body)
 	bodyString := string(bodyBytes)
 	logger.Infof("[kuaishou.connector]GetWebSocketInfo with result:%s", bodyString)
@@ -232,22 +232,11 @@ func (connector *ConnectorStrategy) GetWebSocketInfo(liveRoomId string) error {
 
 	connector.ExtensionInfo.token = token
 	connector.ExtensionInfo.webSocketUrl = webSocketUrl
-	log.Infof("[kuaishou.connector]GetWebSocketInfo with requestUrl:%s token:%s", webSocketUrl, token)
+	logger.Infof("[kuaishou.connector]GetWebSocketInfo with requestUrl:%s token:%s", webSocketUrl, token)
 	return nil
 }
 
-func (connector *ConnectorStrategy) OnOpen(ws *websocket.Conn) {
-	data := connector.connectData()
-	log.Println("[kuaishou.connector][onOpen] [建立wss连接]")
-	err := ws.WriteMessage(websocket.BinaryMessage, data)
-	if err != nil {
-		log.Println("[kuaishou.connector][onOpen] [发送数据失败]", err)
-	}
-
-	go connector.KeepHeartBeat(ws)
-}
-
-func (connector *ConnectorStrategy) connectData() []byte {
+func (connector *ConnectorStrategy) OnOpen(ws *websocket.Conn) (bool, error) {
 	obj := kuaishou_protostub.CSWebEnterRoom{
 		PayloadType: 200,
 		Payload: &kuaishou_protostub.CSWebEnterRoom_Payload{
@@ -258,46 +247,49 @@ func (connector *ConnectorStrategy) connectData() []byte {
 	}
 	marshal, err := proto.Marshal(&obj)
 	if err != nil {
-		log.Println("[kuaishou.connector][connectData] [序列化失败]", err)
-		return nil
-	}
-	logger.Infof("[kuaishou.connector][connectData] sent data: %s", marshal)
-	return marshal
-}
-
-func (connector *ConnectorStrategy) heartbeatData() []byte {
-	obj := kuaishou_protostub.CSWebHeartbeat{
-		PayloadType: 1,
-		Payload: &kuaishou_protostub.CSWebHeartbeat_Payload{
-			Timestamp: uint64(time.Now().Unix()),
-		},
+		logger.Errorf("[kuaishou.connector][ConnectData] [序列化失败] with error: %e", err)
+		return false, err
 	}
 
-	data, err := json.Marshal(obj)
+	logger.Infof("[kuaishou.connector][OnOpen] [建立wss连接] with client: %s", ws.RemoteAddr())
+	err = ws.WriteMessage(websocket.BinaryMessage, marshal)
 	if err != nil {
-		logger.Infof("[kuaishou.connector][heartbeatData] [序列化失败] :%e", err)
-		return nil
+		logger.Infof("[kuaishou.connector][OnOpen] [发送数据失败] with error: %e", err)
+		return false, err
 	}
-	return data
+
+	go connector.KeepHeartBeat(ws)
+	return true, nil
 }
 
 func (connector *ConnectorStrategy) KeepHeartBeat(ws *websocket.Conn) {
 	for {
-		//select {
-		//case <-connector.stopChan:
-		//	logger.Warnf("[kuaishou.connector]KeepHeartBeat stop by stopChan notify for roomId:%s", connector.RoomInfo.RoomId)
-		//	break
-		//default:
-		time.Sleep(20 * time.Second)
-		payload := connector.heartbeatData()
-		log.Println("[kuaishou.connector][KeepHeartBeat] [发送心跳]")
-		err := ws.WriteMessage(websocket.BinaryMessage, payload)
-		if err != nil {
-			log.Println("[kuaishou.connector][KeepHeartBeat] [发送数据失败]", err)
-		}
-		time.Sleep(20 * time.Second)
+		select {
+		case <-connector.stopChan:
+			logger.Warnf("[kuaishou.connector]KeepHeartBeat stop by stopChan notify for roomId:%s", connector.RoomInfo.RoomId)
+			break
+		default:
+			time.Sleep(20 * time.Second)
+			obj := &kuaishou_protostub.CSWebHeartbeat{
+				PayloadType: 1,
+				Payload: &kuaishou_protostub.CSWebHeartbeat_Payload{
+					Timestamp: uint64(time.Now().Unix()),
+				},
+			}
 
-		//}
+			data, err := proto.Marshal(obj)
+			if err != nil {
+				logger.Infof("[kuaishou.connector][KeepHeartBeat] proto.Marshal fail with err:%e", err)
+				continue
+			}
+			err = ws.WriteMessage(websocket.BinaryMessage, data)
+			logger.Infof("❤️[kuaishou.connector][KeepHeartBeat] [发送心跳]")
+
+			if err != nil {
+				log.Println("[kuaishou.connector][KeepHeartBeat] [发送数据失败]", err)
+				continue
+			}
+		}
 	}
 }
 
