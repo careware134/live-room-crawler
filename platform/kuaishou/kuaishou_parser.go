@@ -62,29 +62,31 @@ func parseSCWebLiveWatchingUsers(message []byte) {
 	log.Printf("[parseSCWebLiveWatchingUsers] [不知道是啥的数据包🤷] %s\n", jsonData)
 }
 
+// gift: {"displayWatchingCount":"50+","displayLikeCount":"240","giftFeeds":[{"user":{"principalId":"3xhke9g8e3pc8dc","userName":"伟32448"},"giftId":9,"mergeKey":"3711783256-ijpN3I3R6Eg8BuaQ_1694185080579-9-1","batchSize":1,"comboCount":1,"rank":11,"expireDuration":300000,"deviceHash":"XkLpfw=="}]}
+// comment : {"displayWatchingCount":"100+","displayLikeCount":"241","commentFeeds":[{"user":{"principalId":"3xhke9g8e3pc8dc","userName":"伟32448"},"content":"火箭","deviceHash":"XkLpfw==","showType":1,"senderState":{"wealthGrade":2}}]}
 func parseFeedPushPack(message []byte) {
 	scWebFeedPush := &kuaishou_protostub.SCWebFeedPush{}
 	if err := proto.Unmarshal(message, scWebFeedPush); err != nil {
-		log.Printf("[parseFeedPushPack] [直播间弹幕🐎消息] %v\n", err)
+		log.Printf("[kuaishou.connector][parseFeedPushPack] [✉️直播间弹幕消息] %v\n", err)
 		return
 	}
 	jsonData, err := json.Marshal(scWebFeedPush)
 	if err != nil {
-		log.Printf("[parseFeedPushPack] [直播间弹幕🐎消息] %v\n", err)
+		log.Printf("[kuaishou.connector][parseFeedPushPack] [✉️直播间弹幕消息] %v\n", err)
 		return
 	}
-	log.Printf("[parseFeedPushPack] [直播间弹幕🐎消息] %s\n", jsonData)
+	log.Printf("[kuaishou.connector][parseFeedPushPack] [✉️直播间弹幕消息] %s\n", jsonData)
 }
 
 func parseHeartBeatPack(message []byte) {
 	heartAckMsg := &kuaishou_protostub.SCHeartbeatAck{}
 	if err := proto.Unmarshal(message, heartAckMsg); err != nil {
-		log.Printf("[parseHeartBeatPack] [心跳❤️响应] %v\n", err)
+		log.Printf("[kuaishou.connector][parseHeartBeatPack] [心跳❤️响应] %v\n", err)
 		return
 	}
 	jsonData, err := json.Marshal(heartAckMsg)
 	if err != nil {
-		log.Printf("[parseHeartBeatPack] [心跳❤️响应] %v\n", err)
+		log.Printf("[kuaishou.connector][parseHeartBeatPack] [心跳❤️响应] %v\n", err)
 		return
 	}
 	log.Printf("[parseHeartBeatPack] [心跳❤️响应] %s\n", jsonData)

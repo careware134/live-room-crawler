@@ -16,7 +16,7 @@ import (
 func InitLog() {
 	// Create a lumberjack logger that writes to a file
 	logger := &lumberjack.Logger{
-		Filename:   "./log/app.log",
+		Filename:   "./log/app.log.1",
 		MaxSize:    10, // Max size in MB before rolling over
 		MaxBackups: 5,  // Max number of old log files to keep
 		MaxAge:     30, // Max number of days to keep old log files
