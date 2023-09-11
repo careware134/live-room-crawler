@@ -47,6 +47,22 @@ https://odd-card-01e.notion.site/web-socket-86f57165e3cd4ca09aaf056ec54ea414
       "type": "start",
       "trace_id": "xx",
       "target": {
+         "live_url" : "https://live.kuaishou.com/u/3xtusmi4exp4t2s",
+         "platform": "kuaishou"
+      },
+      "service": {
+          "api_base_url": "https://aigc-video-dev.softsugar.com/aigc/live/live-api-dev",
+          "project_id": "1351",
+          "tenant_id": "10643218595",
+          "authorization": "eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiIxOWRmMTgwZi0yNWVmLTRjNWYtOGVlYy0yMDdlZGZiNzQ2ZTUiLCJPcmlnaW5hbFNvdXJjZSI6IlBDX0xJVkUiLCJzdWIiOiI2NDMyMTg1OTUiLCJleHAiOjE2OTU1Mzg2NTV9.luk1MalRiopIVtCNgLRFQ1tl4m5mRW66eZibScAm6LJ3EDpPB2Nd0Vu0HDotK0X1sCSoF5lAMiy_9-UwUg5iGA"
+      }
+   }
+   ```
+   ```json
+   {
+      "type": "start",
+      "trace_id": "xx",
+      "target": {
          "live_url" : "https://live.douyin.com/403184799752",
          "platform": "douyin"
       },

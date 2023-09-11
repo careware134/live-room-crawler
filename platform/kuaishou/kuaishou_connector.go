@@ -221,8 +221,9 @@ func (connector *ConnectorStrategy) GetLiveRoomId() (string, string, error) {
 }
 
 func (connector *ConnectorStrategy) GetWebSocketInfo(liveRoomId string) (*ExtensionInfo, error) {
-	logger.Infof("GetWebSocketInfo with liveRoomId: %s", liveRoomId)
 	requestUrl := fmt.Sprintf(RoomInfoRequestURLPattern, liveRoomId)
+	logger.Infof("GetWebSocketInfo with liveRoomId: %s to request url: %s", liveRoomId, requestUrl)
+
 	req, err := http.NewRequest("GET", requestUrl, nil)
 	if err != nil {
 		fmt.Println("[kuaishou.connector]Failed to create HTTP request:", err)
@@ -277,7 +278,7 @@ func (connector *ConnectorStrategy) StartHeartbeat(ws *websocket.Conn) {
 		select {
 		case <-connector.stopChan:
 			logger.Warnf("💔[kuaishou.connector]StartHeartbeat stop by stopChan notify for roomId:%s", connector.RoomInfo.RoomId)
-			break
+			return
 		default:
 			time.Sleep(20 * time.Second)
 			obj := &kuaishou_protostub.CSWebHeartbeat{

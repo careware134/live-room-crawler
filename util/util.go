@@ -143,3 +143,36 @@ func removeOneLayerOfEscape(jsonString string) (string, error) {
 
 	return unescapedString, nil
 }
+
+func ParseChineseNumber(chineseNumber string) (int, error) {
+	// Remove any trailing characters like "+"
+	chineseNumber = strings.TrimSuffix(chineseNumber, "+")
+
+	// Handle "万" suffix
+	if strings.Contains(chineseNumber, "万") {
+		parts := strings.Split(chineseNumber, "万")
+		if len(parts) != 2 {
+			return 0, fmt.Errorf("Invalid Chinese number format: %s", chineseNumber)
+		}
+
+		base, err := strconv.Atoi(parts[0])
+		if err != nil {
+			return 0, err
+		}
+
+		tenThousand, err := strconv.Atoi(parts[1])
+		if err != nil {
+			return 0, err
+		}
+
+		return base*10000 + tenThousand, nil
+	}
+
+	// Handle regular numbers
+	number, err := strconv.Atoi(chineseNumber)
+	if err != nil {
+		return 0, err
+	}
+
+	return number, nil
+}

@@ -7,6 +7,7 @@ import (
 	"live-room-crawler/domain"
 	"live-room-crawler/platform/kuaishou/kuaishou_protostub"
 	"live-room-crawler/registry/data"
+	"live-room-crawler/util"
 	"time"
 )
 
@@ -27,6 +28,17 @@ func (connector *ConnectorStrategy) OnMessage(message []byte, localConn *websock
 		parseHeartBeatPack(wssPackage.Payload)
 	case kuaishou_protostub.PayloadType_SC_FEED_PUSH:
 		feedPushMessage := parseFeedPushPack(wssPackage.Payload)
+		if feedPushMessage == nil {
+			log.Printf("[onMessage] [parseFeedPushPack 解析失败❗️] %v")
+			return
+		}
+		if feedPushMessage.DisplayWatchingCount != "" {
+			number, err := util.ParseChineseNumber(feedPushMessage.DisplayWatchingCount)
+			if err == nil {
+				registry.UpdateStatistics(localConn, domain.ONLINE, domain.BuildStatisticsCounter(uint64(number), false))
+			}
+		}
+		// gift
 		if feedPushMessage.GiftFeeds != nil {
 			giftFeeds := feedPushMessage.GiftFeeds
 			giftCount := 0
@@ -35,6 +47,7 @@ func (connector *ConnectorStrategy) OnMessage(message []byte, localConn *websock
 			}
 			registry.UpdateStatistics(localConn, domain.GIFT, domain.BuildStatisticsCounter(uint64(giftCount), true))
 		}
+		// comment
 		if feedPushMessage.CommentFeeds != nil {
 			commentFeeds := feedPushMessage.CommentFeeds
 			registry.UpdateStatistics(localConn, domain.COMMENT, domain.BuildStatisticsCounter(uint64(len(commentFeeds)), true))
@@ -47,8 +60,17 @@ func (connector *ConnectorStrategy) OnMessage(message []byte, localConn *websock
 				})
 			}
 		}
+		// like
+		if feedPushMessage.LikeFeeds != nil {
+			likeFeeds := feedPushMessage.LikeFeeds
+			registry.UpdateStatistics(localConn, domain.LIKE, domain.BuildStatisticsCounter(uint64(len(likeFeeds)), true))
+		}
 	case kuaishou_protostub.PayloadType_SC_LIVE_WATCHING_LIST:
-		parseSCWebLiveWatchingUsers(wssPackage.Payload)
+		users := parseSCWebLiveWatchingUsers(wssPackage.Payload)
+		if users != nil {
+			watchingUser := users.WatchingUser
+			registry.UpdateStatistics(localConn, domain.VIEW, domain.BuildStatisticsCounter(uint64(len(watchingUser)), true))
+		}
 	default:
 		jsonData, err := json.Marshal(wssPackage)
 		if err != nil {
@@ -73,19 +95,21 @@ func parseEnterRoomAckPack(message []byte) {
 	log.Printf("[parseEnterRoomAckPack] [进入房间成功ACK应答👌] success: %s\n", jsonData)
 }
 
-func parseSCWebLiveWatchingUsers(message []byte) {
+func parseSCWebLiveWatchingUsers(message []byte) *kuaishou_protostub.SCWebLiveWatchingUsers {
 	scWebLiveWatchingUsers := &kuaishou_protostub.SCWebLiveWatchingUsers{}
 	if err := proto.Unmarshal(message, scWebLiveWatchingUsers); err != nil {
-		log.Printf("[parseSCWebLiveWatchingUsers] [不知道是啥的数据包🤷] %v\n", err)
-		return
+		log.Printf("[parseSCWebLiveWatchingUsers] [在线用户👨🏻‍] %v\n", err)
+		return nil
 	}
 	jsonData, err := json.Marshal(scWebLiveWatchingUsers)
 	if err != nil {
-		log.Printf("[parseSCWebLiveWatchingUsers] [不知道是啥的数据包🤷] %v\n", err)
-		return
+		log.Printf("[parseSCWebLiveWatchingUsers] [在线用户👨🏻‍] %v\n", err)
+		return nil
 	}
 
-	log.Printf("[parseSCWebLiveWatchingUsers] [不知道是啥的数据包🤷] %s\n", jsonData)
+	log.Printf("[parseSCWebLiveWatchingUsers] [在线用户👨🏻‍] %s\n", jsonData)
+	return scWebLiveWatchingUsers
+
 }
 
 // gift: {"displayWatchingCount":"50+","displayLikeCount":"240","giftFeeds":[{"user":{"principalId":"3xhke9g8e3pc8dc","userName":"伟32448"},"giftId":9,"mergeKey":"3711783256-ijpN3I3R6Eg8BuaQ_1694185080579-9-1","batchSize":1,"comboCount":1,"rank":11,"expireDuration":300000,"deviceHash":"XkLpfw=="}]}
