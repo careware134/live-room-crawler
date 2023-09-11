@@ -57,8 +57,8 @@ func NewInstance(liveUrl string, stopChan chan struct{}) *ConnectorStrategy {
 func (connector *ConnectorStrategy) Connect() constant.ResponseStatus {
 	roomInfo := connector.GetRoomInfo()
 	if roomInfo == nil {
-		logger.Infof("🎦[kuaishou.ConnectorStrategy] Start kuaishou fail for url: %s", connector.liveUrl)
-		return constant.INVALID_LIVE_URL
+		logger.Infof("🎦[kuaishou.ConnectorStrategy] fail to get kuaishou roomInfo with url: %s", connector.liveUrl)
+		return constant.FAIL_GETTING_ROOM_INFO
 	}
 
 	_, err := connector.GetWebSocketInfo(roomInfo.RoomId)
@@ -70,8 +70,10 @@ func (connector *ConnectorStrategy) Connect() constant.ResponseStatus {
 	url := connector.ExtensionInfo.webSocketUrl
 	conn, _, err := websocket.DefaultDialer.Dial(url, header)
 	if err != nil {
+		logger.Infof("[kuaishou.connnector][connect]fail to dial to addr:%s ", url)
 		return constant.CONNECTION_FAIL
 	}
+	connector.conn = conn
 	logger.Infof("[kuaishou.connnector][connect]dial to addr:%s ", url)
 
 	obj := kuaishou_protostub.CSWebEnterRoom{

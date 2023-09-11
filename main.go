@@ -2,6 +2,7 @@ package main
 
 import (
 	"bitbucket.org/neiku/winornot"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/1set/gut/yos"
@@ -81,7 +82,11 @@ func main() {
 			LiveURL:  liveUrl,
 		}, make(chan struct{}))
 
-		platformConnector.Connect()
+		responseStatus := platformConnector.Connect()
+		if !responseStatus.Success {
+			marshal, _ := json.Marshal(responseStatus)
+			logger.Fatalf("fail to connect to platform:%s url:%s with response:%s", platformName, liveUrl, marshal)
+		}
 		go platformConnector.StartListen(nil)
 		fmt.Scanln() // Wait for user input
 

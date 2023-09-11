@@ -17,8 +17,8 @@ var (
 	LIVE_CONNECTION_CLOSED = ResponseStatus{Success: false, Code: "LIVE_CONNECTION_CLOSED", Message: "连接回收：心跳丢失或直播间关闭！"}
 	INVALID_LIVE_URL       = ResponseStatus{Success: false, Code: "INVALID_LIVE_URL", Message: "无效直播间地址，请确认！"}
 	UNKNOWN_PLATFORM       = ResponseStatus{Success: false, Code: "UNKNOWN_PLATFORM", Message: "未知直播间平台！"}
-
-	UNKNOWN_NLP_RESPONSE = ResponseStatus{Success: false, Code: "UNKNOWN_NLP_RESPONSE", Message: "请求NLP返回未知响应！"}
+	FAIL_GETTING_ROOM_INFO = ResponseStatus{Success: false, Code: "FAIL_GETTING_ROOM_INFO", Message: "获取直播间信息失败！"}
+	UNKNOWN_NLP_RESPONSE   = ResponseStatus{Success: false, Code: "UNKNOWN_NLP_RESPONSE", Message: "请求NLP返回未知响应！"}
 )
 
 const (
