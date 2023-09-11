@@ -1,6 +1,7 @@
 package kuaishou
 
 const (
+	PageIdCharacterSet        = "-_zyxwvutsrqponmlkjihgfedcba9876543210ZYXWVUTSRQPONMLKJIHGFEDCBA"
 	KuaishouApiHost           = "https://live.kuaishou.com/live_graphql"
 	RoomInfoRegExp            = `_STATE__=(.*?);\(function\(\)\{var s;\(s=document\.currentScript\|\|document\.scripts\[document\.scripts\.length-1]\)\.parentNode\.r`
 	RoomInfoRequestURLPattern = "https://live.kuaishou.com/live_api/liveroom/websocketinfo?liveStreamId=%s"

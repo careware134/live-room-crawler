@@ -10,6 +10,7 @@ import (
 	"live-room-crawler/constant"
 	"live-room-crawler/domain"
 	"live-room-crawler/platform/kuaishou/kuaishou_protostub"
+	"live-room-crawler/registry/data"
 	"live-room-crawler/util"
 	"math/rand"
 	"net/http"
@@ -60,22 +61,42 @@ func (connector *ConnectorStrategy) Connect() constant.ResponseStatus {
 		return constant.INVALID_LIVE_URL
 	}
 
-	err := connector.GetWebSocketInfo(roomInfo.RoomId)
+	_, err := connector.GetWebSocketInfo(roomInfo.RoomId)
 	if err != nil {
-		log.Fatal(err)
+		return constant.CONNECTION_FAIL
 	}
 
 	header := connector.ExtensionInfo.Headers
-
-	conn, dialResp, err := websocket.DefaultDialer.Dial(connector.ExtensionInfo.webSocketUrl, header)
+	url := connector.ExtensionInfo.webSocketUrl
+	conn, _, err := websocket.DefaultDialer.Dial(url, header)
 	if err != nil {
-		log.Fatal(err)
+		return constant.CONNECTION_FAIL
 	}
-	marshal, _ := json.Marshal(dialResp)
-	logger.Infof("[kuaishou.connnector][connect]dial with response:%s", marshal)
-	connector.OnOpen(conn)
+	logger.Infof("[kuaishou.connnector][connect]dial to addr:%s ", url)
 
-	connector.conn = conn
+	obj := kuaishou_protostub.CSWebEnterRoom{
+		PayloadType: 200,
+		Payload: &kuaishou_protostub.CSWebEnterRoom_Payload{
+			Token:        connector.ExtensionInfo.token,
+			LiveStreamId: connector.ExtensionInfo.liveRoomId,
+			PageId:       connector.getPageID(),
+		},
+	}
+
+	marshal, err := proto.Marshal(&obj)
+	if err != nil {
+		logger.Errorf("[kuaishou.connector][ConnectData] [序列化失败] with error: %e", err)
+		return constant.CONNECTION_FAIL
+	}
+
+	logger.Infof("[kuaishou.connector][OnOpen] [建立wss连接] with client: %s", conn.RemoteAddr())
+	err = conn.WriteMessage(websocket.BinaryMessage, marshal)
+	if err != nil {
+		logger.Infof("[kuaishou.connector][OnOpen] [发送数据失败] with error: %e", err)
+		return constant.CONNECTION_FAIL
+	}
+
+	go connector.StartHeartbeat(conn)
 	return constant.SUCCESS
 }
 
@@ -103,49 +124,56 @@ func (connector *ConnectorStrategy) GetRoomInfo() *domain.RoomInfo {
 func (connector *ConnectorStrategy) StartListen(localConn *websocket.Conn) {
 	logger.Infof("[kuaishou.connnector]StartListen for room:%s", connector.RoomInfo.RoomId)
 	connector.IsStart = true
+	dataRegistry := data.GetDataRegistry()
 	for {
 		_, message, err := connector.conn.ReadMessage()
 
-		//select {
-		//case <-connector.stopChan:
-		//	// Stop signal received, exit the goroutine
-		//	logger.Infof("⚓️♪ [kuaishou.ConnectorStrategy] StartListen BREAKED by c.stopChan")
-		//	return
-		//default:
-		if err != nil {
-			logger.Errorf("[kuaishou.ConnectorStrategy] StartListen fail with reason: %e", err)
-			connector.Stop()
+		select {
+		case <-connector.stopChan:
+			// Stop signal received, exit the goroutine
+			logger.Infof("⚓️♪ [kuaishou.ConnectorStrategy] StartListen BREAKED by c.stopChan")
 			return
+		default:
+			if err != nil {
+				logger.Errorf("[kuaishou.ConnectorStrategy] StartListen fail with reason: %e", err)
+				connector.Stop()
+				return
+			}
+			connector.OnMessage(message, localConn, dataRegistry)
 		}
-		connector.OnMessage(message, connector.conn, localConn)
-		//}
 	}
 
 }
 
 func (connector *ConnectorStrategy) Stop() {
-
+	connector.IsStart = false
+	connector.IsStop = true
+	if connector.conn != nil {
+		connector.conn.Close()
+	}
+	title := ""
+	if connector.RoomInfo != nil {
+		title = connector.RoomInfo.RoomTitle
+	}
+	logger.Infof("🎦[kuaishou.ConnectorStrategy] Stop douyin for url: %s title: %s", connector.liveUrl, title)
 }
 
 func (connector *ConnectorStrategy) IsAlive() bool {
-	return false
+	return connector.IsStop
 }
 
 func (connector *ConnectorStrategy) GetLiveRoomId() (string, string, error) {
 	req, err := http.NewRequest("GET", connector.liveUrl, nil)
 	if err != nil {
-		fmt.Println("Failed to create HTTP request:", err)
+		fmt.Println("[kuaishou.connector][GetLiveRoomId]Failed to create HTTP request:", err)
 		return "", "", fmt.Errorf(constant.INVALID_LIVE_URL.Code)
 	}
 
 	req.Header = http.Header{}
 	req.Header.Add("Accept", HeaderAcceptValue)
 	req.Header.Add("User-Agent", HeaderAgentValue)
-	//req.Header.Add("Postman-Token", uuid.NewString())
 	req.Header.Add("Cookie", HeaderCookieValue)
 	req.Header.Add("Cache-Control", "no-cache")
-	//req.Header.Add("Accept-Language", "zh-CN,zh;q=0.9")
-	//req.Header.Add("Sec-Ch-Ua", "\"Chromium\";v=\"116\", \"Not)A;Brand\";v=\"24\", \"Google Chrome\";v=\"116\"")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -190,12 +218,12 @@ func (connector *ConnectorStrategy) GetLiveRoomId() (string, string, error) {
 	return liveRoomId, liveRoomCaption, nil
 }
 
-func (connector *ConnectorStrategy) GetWebSocketInfo(liveRoomId string) error {
+func (connector *ConnectorStrategy) GetWebSocketInfo(liveRoomId string) (*ExtensionInfo, error) {
 	requestUrl := fmt.Sprintf(RoomInfoRequestURLPattern, liveRoomId)
 	req, err := http.NewRequest("GET", requestUrl, nil)
 	if err != nil {
 		fmt.Println("[kuaishou.connector]Failed to create HTTP request:", err)
-		return fmt.Errorf(constant.INVALID_LIVE_URL.Code)
+		return nil, fmt.Errorf(constant.INVALID_LIVE_URL.Code)
 	}
 
 	req.Header.Add("Accept", HeaderAcceptValue)
@@ -207,7 +235,7 @@ func (connector *ConnectorStrategy) GetWebSocketInfo(liveRoomId string) error {
 	resp, err := client.Do(req)
 	if err != nil {
 		logger.Infof("[kuaishou.connector]Failed to send HTTP request:%e", err)
-		return fmt.Errorf(constant.INVALID_LIVE_URL.Code)
+		return nil, fmt.Errorf(constant.INVALID_LIVE_URL.Code)
 	}
 
 	defer func(Body io.ReadCloser) { _ = Body.Close() }(resp.Body)
@@ -230,43 +258,22 @@ func (connector *ConnectorStrategy) GetWebSocketInfo(liveRoomId string) error {
 		break
 	}
 
+	if token == "" || webSocketUrl == "" {
+		logger.Errorf("[kuaishou.connector]GetWebSocketInfo fail to get requestUrl:%s token:%s", webSocketUrl, token)
+		return nil, fmt.Errorf(constant.INVALID_LIVE_URL.Code)
+	}
+
 	connector.ExtensionInfo.token = token
 	connector.ExtensionInfo.webSocketUrl = webSocketUrl
 	logger.Infof("[kuaishou.connector]GetWebSocketInfo with requestUrl:%s token:%s", webSocketUrl, token)
-	return nil
+	return &connector.ExtensionInfo, nil
 }
 
-func (connector *ConnectorStrategy) OnOpen(ws *websocket.Conn) (bool, error) {
-	obj := kuaishou_protostub.CSWebEnterRoom{
-		PayloadType: 200,
-		Payload: &kuaishou_protostub.CSWebEnterRoom_Payload{
-			Token:        connector.ExtensionInfo.token,
-			LiveStreamId: connector.ExtensionInfo.liveRoomId,
-			PageId:       connector.getPageID(),
-		},
-	}
-	marshal, err := proto.Marshal(&obj)
-	if err != nil {
-		logger.Errorf("[kuaishou.connector][ConnectData] [序列化失败] with error: %e", err)
-		return false, err
-	}
-
-	logger.Infof("[kuaishou.connector][OnOpen] [建立wss连接] with client: %s", ws.RemoteAddr())
-	err = ws.WriteMessage(websocket.BinaryMessage, marshal)
-	if err != nil {
-		logger.Infof("[kuaishou.connector][OnOpen] [发送数据失败] with error: %e", err)
-		return false, err
-	}
-
-	go connector.KeepHeartBeat(ws)
-	return true, nil
-}
-
-func (connector *ConnectorStrategy) KeepHeartBeat(ws *websocket.Conn) {
+func (connector *ConnectorStrategy) StartHeartbeat(ws *websocket.Conn) {
 	for {
 		select {
 		case <-connector.stopChan:
-			logger.Warnf("[kuaishou.connector]KeepHeartBeat stop by stopChan notify for roomId:%s", connector.RoomInfo.RoomId)
+			logger.Warnf("💔[kuaishou.connector]StartHeartbeat stop by stopChan notify for roomId:%s", connector.RoomInfo.RoomId)
 			break
 		default:
 			time.Sleep(20 * time.Second)
@@ -279,14 +286,14 @@ func (connector *ConnectorStrategy) KeepHeartBeat(ws *websocket.Conn) {
 
 			data, err := proto.Marshal(obj)
 			if err != nil {
-				logger.Infof("[kuaishou.connector][KeepHeartBeat] proto.Marshal fail with err:%e", err)
+				logger.Infof("[kuaishou.connector][StartHeartbeat] proto.Marshal fail with err:%e", err)
 				continue
 			}
 			err = ws.WriteMessage(websocket.BinaryMessage, data)
-			logger.Infof("❤️[kuaishou.connector][KeepHeartBeat] [发送心跳]")
+			logger.Infof("❤️[kuaishou.connector][StartHeartbeat] [发送心跳]")
 
 			if err != nil {
-				log.Println("[kuaishou.connector][KeepHeartBeat] [发送数据失败]", err)
+				log.Println("[kuaishou.connector][StartHeartbeat] [发送数据失败]", err)
 				continue
 			}
 		}
@@ -294,7 +301,7 @@ func (connector *ConnectorStrategy) KeepHeartBeat(ws *websocket.Conn) {
 }
 
 func (connector *ConnectorStrategy) getPageID() string {
-	charset := "-_zyxwvutsrqponmlkjihgfedcba9876543210ZYXWVUTSRQPONMLKJIHGFEDCBA"
+	charset := PageIdCharacterSet
 	pageID := ""
 	for i := 0; i < 16; i++ {
 		pageID += string(charset[rand.Intn(len(charset))])
