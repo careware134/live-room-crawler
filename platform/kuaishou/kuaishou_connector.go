@@ -221,6 +221,7 @@ func (connector *ConnectorStrategy) GetLiveRoomId() (string, string, error) {
 }
 
 func (connector *ConnectorStrategy) GetWebSocketInfo(liveRoomId string) (*ExtensionInfo, error) {
+	logger.Infof("GetWebSocketInfo with liveRoomId: %s", liveRoomId)
 	requestUrl := fmt.Sprintf(RoomInfoRequestURLPattern, liveRoomId)
 	req, err := http.NewRequest("GET", requestUrl, nil)
 	if err != nil {

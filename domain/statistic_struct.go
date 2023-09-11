@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"fmt"
 	"github.com/google/uuid"
 	"time"
 )
@@ -57,6 +58,10 @@ type StatisticCounter struct {
 	Count     uint64 `json:"count,omitempty"`
 	Incr      bool   `json:"incr,omitempty"`
 	LastMatch int    `json:"lastPush,omitempty"`
+}
+
+func (p StatisticCounter) String() string {
+	return fmt.Sprintf("SC{cnt: %d, in: %v}", p.Count, p.Incr)
 }
 
 func BuildStatisticsCounter(count uint64, incr bool) *StatisticCounter {
