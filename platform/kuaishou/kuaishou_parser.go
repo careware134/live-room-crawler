@@ -17,7 +17,7 @@ func (connector *ConnectorStrategy) OnMessage(message []byte, localConn *websock
 
 	wssPackage := &kuaishou_protostub.SocketMessage{}
 	if err := proto.Unmarshal(message, wssPackage); err != nil {
-		log.Printf("[onMessage] [无法解析的数据包⚠️] %v\n", err)
+		util.Logger().Printf("[onMessage] [无法解析的数据包⚠️] %v\n", err)
 		return
 	}
 
@@ -29,7 +29,7 @@ func (connector *ConnectorStrategy) OnMessage(message []byte, localConn *websock
 	case kuaishou_protostub.PayloadType_SC_FEED_PUSH:
 		feedPushMessage := parseFeedPushPack(wssPackage.Payload)
 		if feedPushMessage == nil {
-			log.Printf("[onMessage] [parseFeedPushPack 解析失败❗️] %v")
+			util.Logger().Printf("[onMessage] [parseFeedPushPack 解析失败❗️] %v")
 			return
 		}
 		if feedPushMessage.DisplayWatchingCount != "" {
@@ -74,40 +74,40 @@ func (connector *ConnectorStrategy) OnMessage(message []byte, localConn *websock
 	default:
 		jsonData, err := json.Marshal(wssPackage)
 		if err != nil {
-			log.Printf("[onMessage] [无法解析的数据包⚠️] %v\n", err)
+			util.Logger().Infof("[onMessage] [无法解析的数据包⚠️] %v\n", err)
 			return
 		}
-		log.Printf("[onMessage] [无法解析的数据包⚠️] wssPackage.PayloadType%s json:%s", wssPackage.PayloadType, jsonData)
+		util.Logger().Infof("[onMessage] [无法解析的数据包⚠️] wssPackage.PayloadType%s json:%s", wssPackage.PayloadType, jsonData)
 	}
 }
 
 func parseEnterRoomAckPack(message []byte) {
 	scWebEnterRoomAck := &kuaishou_protostub.SCWebEnterRoomAck{}
 	if err := proto.Unmarshal(message, scWebEnterRoomAck); err != nil {
-		log.Printf("[parseEnterRoomAckPack] [进入房间成功ACK应答👌] fail unmarshal proto: %v", err)
+		util.Logger().Infof("[parseEnterRoomAckPack] [进入房间成功ACK应答👌] fail unmarshal proto: %v", err)
 		return
 	}
 	jsonData, err := json.Marshal(scWebEnterRoomAck)
 	if err != nil {
-		log.Printf("[parseEnterRoomAckPack] [进入房间成功ACK应答👌]fail unmarshal json: %v", err)
+		util.Logger().Infof("[parseEnterRoomAckPack] [进入房间成功ACK应答👌]fail unmarshal json: %v", err)
 		return
 	}
-	log.Printf("[parseEnterRoomAckPack] [进入房间成功ACK应答👌] success: %s\n", jsonData)
+	util.Logger().Infof("[parseEnterRoomAckPack] [进入房间成功ACK应答👌] success: %s\n", jsonData)
 }
 
 func parseSCWebLiveWatchingUsers(message []byte) *kuaishou_protostub.SCWebLiveWatchingUsers {
 	scWebLiveWatchingUsers := &kuaishou_protostub.SCWebLiveWatchingUsers{}
 	if err := proto.Unmarshal(message, scWebLiveWatchingUsers); err != nil {
-		log.Printf("[parseSCWebLiveWatchingUsers] [在线用户👨🏻‍] %v\n", err)
+		util.Logger().Infof("[parseSCWebLiveWatchingUsers] [在线用户👨🏻‍] %v\n", err)
 		return nil
 	}
 	jsonData, err := json.Marshal(scWebLiveWatchingUsers)
 	if err != nil {
-		log.Printf("[parseSCWebLiveWatchingUsers] [在线用户👨🏻‍] %v\n", err)
+		util.Logger().Infof("[parseSCWebLiveWatchingUsers] [在线用户👨🏻‍] %v\n", err)
 		return nil
 	}
 
-	log.Printf("[parseSCWebLiveWatchingUsers] [在线用户👨🏻‍] %s\n", jsonData)
+	util.Logger().Infof("[parseSCWebLiveWatchingUsers] [在线用户👨🏻‍] %s\n", jsonData)
 	return scWebLiveWatchingUsers
 
 }
@@ -117,29 +117,29 @@ func parseSCWebLiveWatchingUsers(message []byte) *kuaishou_protostub.SCWebLiveWa
 func parseFeedPushPack(message []byte) *kuaishou_protostub.SCWebFeedPush {
 	scWebFeedPush := &kuaishou_protostub.SCWebFeedPush{}
 	if err := proto.Unmarshal(message, scWebFeedPush); err != nil {
-		log.Printf("[kuaishou.connector][parseFeedPushPack] [✉️直播间弹幕消息] %v\n", err)
+		util.Logger().Infof("[kuaishou.connector][parseFeedPushPack] [✉️直播间弹幕消息] %v\n", err)
 		return nil
 	}
 	jsonData, err := json.Marshal(scWebFeedPush)
 	if err != nil {
-		log.Printf("[kuaishou.connector][parseFeedPushPack] [✉️直播间弹幕消息] %v\n", err)
+		util.Logger().Infof("[kuaishou.connector][parseFeedPushPack] [✉️直播间弹幕消息] %v\n", err)
 		return nil
 	}
 
-	log.Printf("[kuaishou.connector][parseFeedPushPack] [✉️直播间弹幕消息] %s\n", jsonData)
+	util.Logger().Infof("[kuaishou.connector][parseFeedPushPack] [✉️直播间弹幕消息] %s\n", jsonData)
 	return scWebFeedPush
 }
 
 func parseHeartBeatPack(message []byte) {
 	heartAckMsg := &kuaishou_protostub.SCHeartbeatAck{}
 	if err := proto.Unmarshal(message, heartAckMsg); err != nil {
-		log.Printf("[kuaishou.connector][parseHeartBeatPack] [心跳❤️响应] %v\n", err)
+		util.Logger().Infof("[kuaishou.connector][parseHeartBeatPack] [心跳❤️响应] %v\n", err)
 		return
 	}
 	jsonData, err := json.Marshal(heartAckMsg)
 	if err != nil {
-		log.Printf("[kuaishou.connector][parseHeartBeatPack] [心跳❤️响应] %v\n", err)
+		util.Logger().Infof("[kuaishou.connector][parseHeartBeatPack] [心跳❤️响应] %v\n", err)
 		return
 	}
-	log.Printf("[parseHeartBeatPack] [心跳❤️响应] %s\n", jsonData)
+	util.Logger().Infof("[parseHeartBeatPack] [心跳❤️响应] %s\n", jsonData)
 }

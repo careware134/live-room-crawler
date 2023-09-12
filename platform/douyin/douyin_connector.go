@@ -90,7 +90,7 @@ func (c *ConnectorStrategy) Stop() {
 	if c.RoomInfo != nil {
 		title = c.RoomInfo.RoomTitle
 	}
-	logger.Infof("♪[douyin.ConnectorStrategy] Stop douyin for url: %s title: %s", c.liveUrl, title)
+	logger.Infof("♪[kuaishou.ConnectorStrategy] Stop kuaishou for url: %s title: %s", c.liveUrl, title)
 }
 
 func (c *ConnectorStrategy) IsAlive() bool {

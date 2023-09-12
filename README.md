@@ -47,7 +47,7 @@ https://odd-card-01e.notion.site/web-socket-86f57165e3cd4ca09aaf056ec54ea414
       "type": "start",
       "trace_id": "xx",
       "target": {
-         "live_url" : "https://live.kuaishou.com/u/3xtusmi4exp4t2s",
+         "live_url" : "https://live.kuaishou.com/u/QD6666865",
          "platform": "kuaishou"
       },
       "service": {

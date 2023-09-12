@@ -159,20 +159,20 @@ func (client *LocalClient) onStart(request *domain.CommandRequest) *domain.Comma
 		return response
 	}
 	client.Connector = &connector
-	info := connector.GetRoomInfo()
-	if info == nil {
-		response.ResponseStatus = constant.INVALID_LIVE_URL
-		logger.Errorf("onStart fail with INVALID_LIVE_URL")
-		return response
-	}
+	//info := connector.GetRoomInfo()
+	//if info == nil {
+	//	response.ResponseStatus = constant.INVALID_LIVE_URL
+	//	logger.Errorf("onStart fail with INVALID_LIVE_URL")
+	//	return response
+	//}
 
 	// 0. invoke connect to prepare listen
-	response.Room = *info
 	responseStatus := connector.Connect()
 	if !responseStatus.Success {
 		response.ResponseStatus = responseStatus
 		return response
 	}
+	response.Room = *connector.GetRoomInfo()
 
 	// .1 then start mark ready
 	GetClientRegistry().MarkReady(client.Conn, request, client)
