@@ -70,6 +70,7 @@ type ServiceStruct struct {
 type TargetStruct struct {
 	Platform Platform `json:"platform"`
 	LiveURL  string   `json:"live_url"`
+	Cookie   string   `json:"cookie"`
 }
 
 // CommandResponse 响应体

@@ -174,8 +174,8 @@ func (connector *ConnectorStrategy) GetLiveRoomId() (string, string, error) {
 	req.Header = http.Header{}
 	req.Header.Add("Accept", HeaderAcceptValue)
 	req.Header.Add("User-Agent", HeaderAgentValue)
-	req.Header.Add("Cookie", HeaderCookieValue)
-	req.Header.Add("Cache-Control", "no-cache")
+	req.Header.Add("Cookie", HeaderCookieValue3)
+	//req.Header.Add("Cache-Control", "no-cache")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -232,9 +232,9 @@ func (connector *ConnectorStrategy) GetWebSocketInfo(liveRoomId string) (*Extens
 
 	req.Header.Add("Accept", HeaderAcceptValue)
 	req.Header.Add("User-Agent", HeaderAgentValue)
-	req.Header.Add("Cookie", HeaderCookieValue)
-	req.Header.Add("Cookie", HeaderCookieValue2)
-	//req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Cookie", HeaderCookieValue3)
+	//req.Header.Add("Cookie", HeaderCookieValue2)
+	req.Header.Add("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
