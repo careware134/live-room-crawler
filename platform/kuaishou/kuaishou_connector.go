@@ -198,16 +198,16 @@ func (connector *ConnectorStrategy) GetLiveRoomId() (string, string, error) {
 	util.Logger().Infof("[kuaishou.connector]roomData: %s", jsonData)
 
 	root, err := ajson.Unmarshal([]byte(jsonData))
-	//liveRoomIdNodes, err := root.JSONPath("$.liveroom.liveStream.id")
-	liveRoomIdNodes, err := root.JSONPath("$.liveroom.playList[0].liveStream.id")
+	liveRoomIdNodes, err := root.JSONPath("$..liveroom.liveStream.id")
+	//liveRoomIdNodes, err := root.JSONPath("$.liveroom.playList[0].liveStream.id")
 	liveRoomId := ""
 	for _, node := range liveRoomIdNodes {
 		liveRoomId = node.MustString()
 		break
 	}
 
-	//liveCaptionNodes, err := root.JSONPath("$.liveroom.liveStream.caption")
-	liveCaptionNodes, err := root.JSONPath("$.liveroom.playList[0].liveStream.caption")
+	liveCaptionNodes, err := root.JSONPath("$.liveroom..liveStream.caption")
+	//liveCaptionNodes, err := root.JSONPath("$.liveroom.playList[0].liveStream.caption")
 
 	liveRoomCaption := ""
 	for _, node := range liveCaptionNodes {
