@@ -174,7 +174,7 @@ func (connector *ConnectorStrategy) GetLiveRoomId() (string, string, error) {
 	req.Header = http.Header{}
 	req.Header.Add("Accept", HeaderAcceptValue)
 	req.Header.Add("User-Agent", HeaderAgentValue)
-	req.Header.Add("Cookie", HeaderCookieValue4)
+	req.Header.Add("Cookie", HeaderCookieValue5)
 	//req.Header.Add("Cache-Control", "no-cache")
 
 	client := &http.Client{}
@@ -198,14 +198,17 @@ func (connector *ConnectorStrategy) GetLiveRoomId() (string, string, error) {
 	util.Logger().Infof("[kuaishou.connector]roomData: %s", jsonData)
 
 	root, err := ajson.Unmarshal([]byte(jsonData))
-	liveRoomIdNodes, err := root.JSONPath("$.liveroom.liveStream.id")
+	//liveRoomIdNodes, err := root.JSONPath("$.liveroom.liveStream.id")
+	liveRoomIdNodes, err := root.JSONPath("$.liveroom.playList[0].liveStream.id")
 	liveRoomId := ""
 	for _, node := range liveRoomIdNodes {
 		liveRoomId = node.MustString()
 		break
 	}
 
-	liveCaptionNodes, err := root.JSONPath("$.liveroom.liveStream.caption")
+	//liveCaptionNodes, err := root.JSONPath("$.liveroom.liveStream.caption")
+	liveCaptionNodes, err := root.JSONPath("$.liveroom.playList[0].liveStream.caption")
+
 	liveRoomCaption := ""
 	for _, node := range liveCaptionNodes {
 		liveRoomCaption = node.MustString()
@@ -232,7 +235,7 @@ func (connector *ConnectorStrategy) GetWebSocketInfo(liveRoomId string) (*Extens
 
 	req.Header.Add("Accept", HeaderAcceptValue)
 	req.Header.Add("User-Agent", HeaderAgentValue)
-	req.Header.Add("Cookie", HeaderCookieValue4)
+	req.Header.Add("Cookie", HeaderCookieValue5)
 	//req.Header.Add("Cookie", HeaderCookieValue2)
 	req.Header.Add("Content-Type", "application/json")
 
