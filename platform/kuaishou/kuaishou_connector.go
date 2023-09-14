@@ -23,7 +23,7 @@ var (
 )
 
 type ConnectorStrategy struct {
-	liveUrl       string
+	Target        domain.TargetStruct
 	RoomInfo      *domain.RoomInfo
 	conn          *websocket.Conn
 	localConn     *websocket.Conn
@@ -34,11 +34,11 @@ type ConnectorStrategy struct {
 }
 
 type ExtensionInfo struct {
+	liveUrl      string
 	token        string
 	cookie       string
 	webSocketUrl string
 	liveRoomId   string
-	liveUrl      string
 	Headers      http.Header
 }
 
@@ -46,10 +46,10 @@ var (
 	logger = util.Logger()
 )
 
-func NewInstance(liveUrl string, stopChan chan struct{}) *ConnectorStrategy {
-	util.Logger().Infof("🎦[kuaishou.ConnectorStrategy] NewInstance for url: %s", liveUrl)
+func NewInstance(Target domain.TargetStruct, stopChan chan struct{}) *ConnectorStrategy {
+	util.Logger().Infof("🎦[kuaishou.ConnectorStrategy] NewInstance for url: %s cookie:%s", Target.LiveURL, Target.Cookie)
 	return &ConnectorStrategy{
-		liveUrl:  liveUrl,
+		Target:   Target,
 		stopChan: stopChan,
 	}
 }
@@ -57,7 +57,7 @@ func NewInstance(liveUrl string, stopChan chan struct{}) *ConnectorStrategy {
 func (connector *ConnectorStrategy) Connect() constant.ResponseStatus {
 	roomInfo := connector.GetRoomInfo()
 	if roomInfo == nil {
-		util.Logger().Infof("🎦[kuaishou.ConnectorStrategy] fail to get kuaishou roomInfo with url: %s", connector.liveUrl)
+		util.Logger().Infof("🎦[kuaishou.ConnectorStrategy] fail to get kuaishou roomInfo with url: %s", connector.Target.LiveURL)
 		return constant.FAIL_GETTING_ROOM_INFO
 	}
 
@@ -70,11 +70,11 @@ func (connector *ConnectorStrategy) Connect() constant.ResponseStatus {
 	url := connector.ExtensionInfo.webSocketUrl
 	conn, _, err := websocket.DefaultDialer.Dial(url, header)
 	if err != nil {
-		util.Logger().Infof("[kuaishou.connnector][connect]fail to dial to addr:%s ", url)
+		util.Logger().Infof("[kuaishou.connnector][connect]fail to dial to addr:%s ", connector.Target.LiveURL)
 		return constant.CONNECTION_FAIL
 	}
 	connector.conn = conn
-	util.Logger().Infof("[kuaishou.connnector][connect]dial to addr:%s ", url)
+	util.Logger().Infof("[kuaishou.connnector][connect]dial to addr:%s ", connector.Target.LiveURL)
 
 	obj := kuaishou_protostub.CSWebEnterRoom{
 		PayloadType: 200,
@@ -157,7 +157,7 @@ func (connector *ConnectorStrategy) Stop() {
 	if connector.RoomInfo != nil {
 		title = connector.RoomInfo.RoomTitle
 	}
-	util.Logger().Infof("🎦[kuaishou.ConnectorStrategy] Stop douyin for url: %s title: %s", connector.liveUrl, title)
+	util.Logger().Infof("🎦[kuaishou.ConnectorStrategy] Stop douyin for url: %s title: %s", connector.Target.LiveURL, title)
 }
 
 func (connector *ConnectorStrategy) IsAlive() bool {
@@ -165,7 +165,7 @@ func (connector *ConnectorStrategy) IsAlive() bool {
 }
 
 func (connector *ConnectorStrategy) GetLiveRoomId() (string, string, error) {
-	req, err := http.NewRequest("GET", connector.liveUrl, nil)
+	req, err := http.NewRequest("GET", connector.Target.LiveURL, nil)
 	if err != nil {
 		fmt.Println("[kuaishou.connector][GetLiveRoomId]Failed to create HTTP request:", err)
 		return "", "", fmt.Errorf(constant.INVALID_LIVE_URL.Code)
@@ -174,7 +174,12 @@ func (connector *ConnectorStrategy) GetLiveRoomId() (string, string, error) {
 	req.Header = http.Header{}
 	req.Header.Add("Accept", HeaderAcceptValue)
 	req.Header.Add("User-Agent", HeaderAgentValue)
-	req.Header.Add("Cookie", HeaderCookieValue7)
+	cookie := connector.Target.Cookie
+	if cookie == "" {
+		cookie = HeaderCookieValue7
+	}
+	req.Header.Add("Cookie", cookie)
+	util.Logger().Infof("[kuaishou.connector]reques roomData url:%s cookie: %s", connector.Target.LiveURL, cookie)
 	//req.Header.Add("Cache-Control", "no-cache")
 
 	client := &http.Client{}
@@ -235,7 +240,13 @@ func (connector *ConnectorStrategy) GetWebSocketInfo(liveRoomId string) (*Extens
 
 	req.Header.Add("Accept", HeaderAcceptValue)
 	req.Header.Add("User-Agent", HeaderAgentValue)
-	req.Header.Add("Cookie", HeaderCookieValue7)
+	cookie := connector.Target.Cookie
+	if cookie == "" {
+		cookie = HeaderCookieValue7
+	}
+	req.Header.Add("Cookie", cookie)
+	util.Logger().Infof("[kuaishou.connector]request GetWebSocketInfo url:%s cookie: %s", requestUrl, cookie)
+	req.Header.Add("Cookie", cookie)
 	//req.Header.Add("Cookie", HeaderCookieValue2)
 	req.Header.Add("Content-Type", "application/json")
 

@@ -22,10 +22,10 @@ type IPlatformConnectorStrategy interface {
 
 func NewConnector(targetStruct domain.TargetStruct, stopChan chan struct{}) IPlatformConnectorStrategy {
 	if targetStruct.Platform == domain.DOUYIN {
-		return douyin.NewInstance(targetStruct.LiveURL, stopChan)
+		return douyin.NewInstance(targetStruct, stopChan)
 	}
 	if targetStruct.Platform == domain.KUAISHOU {
-		return kuaishou.NewInstance(targetStruct.LiveURL, stopChan)
+		return kuaishou.NewInstance(targetStruct, stopChan)
 	}
 	return nil
 }

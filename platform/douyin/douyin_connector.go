@@ -17,7 +17,7 @@ var (
 )
 
 type ConnectorStrategy struct {
-	liveUrl   string
+	Target    domain.TargetStruct
 	RoomInfo  *domain.RoomInfo
 	conn      *websocket.Conn
 	localConn *websocket.Conn
@@ -26,10 +26,10 @@ type ConnectorStrategy struct {
 	stopChan  chan struct{}
 }
 
-func NewInstance(liveUrl string, stopChan chan struct{}) *ConnectorStrategy {
-	logger.Infof("♪ [douyin.ConnectorStrategy] NewInstance for url: %s", liveUrl)
+func NewInstance(Target domain.TargetStruct, stopChan chan struct{}) *ConnectorStrategy {
+	logger.Infof("♪ [douyin.ConnectorStrategy] NewInstance for url: %s cookie:%s", Target.LiveURL, Target.Cookie)
 	return &ConnectorStrategy{
-		liveUrl:  liveUrl,
+		Target:   Target,
 		stopChan: stopChan,
 	}
 }
@@ -37,7 +37,7 @@ func NewInstance(liveUrl string, stopChan chan struct{}) *ConnectorStrategy {
 func (c *ConnectorStrategy) Connect() constant.ResponseStatus {
 	roomInfo := c.GetRoomInfo()
 	if roomInfo == nil {
-		logger.Infof("♪ [douyin.ConnectorStrategy] Start douyin fail for url: %s", c.liveUrl)
+		logger.Infof("♪ [douyin.ConnectorStrategy] Start douyin fail for url: %s", c.Target.LiveURL)
 		return constant.INVALID_LIVE_URL
 	}
 
@@ -49,7 +49,7 @@ func (c *ConnectorStrategy) Connect() constant.ResponseStatus {
 
 	conn, _, err := websocket.DefaultDialer.Dial(websocketUrl, header)
 	c.conn = conn
-	logger.Infof("♪ [douyin.ConnectorStrategy] Start douyin success for url: %s title: %s", c.liveUrl, c.RoomInfo.RoomTitle)
+	logger.Infof("♪ [douyin.ConnectorStrategy] Start douyin success for url: %s title: %s", c.Target.LiveURL, c.RoomInfo.RoomTitle)
 
 	if err != nil {
 		logger.Errorf(" [douyin.ConnectorStrategy] fail to dial websocket! url: %s error:%e", websocketUrl, err)
@@ -90,7 +90,7 @@ func (c *ConnectorStrategy) Stop() {
 	if c.RoomInfo != nil {
 		title = c.RoomInfo.RoomTitle
 	}
-	logger.Infof("♪[kuaishou.ConnectorStrategy] Stop kuaishou for url: %s title: %s", c.liveUrl, title)
+	logger.Infof("♪[kuaishou.ConnectorStrategy] Stop kuaishou for url: %s title: %s", c.Target.LiveURL, title)
 }
 
 func (c *ConnectorStrategy) IsAlive() bool {
@@ -106,7 +106,7 @@ func (c *ConnectorStrategy) GetRoomInfo() *domain.RoomInfo {
 
 func (c *ConnectorStrategy) getRoomInfoByRequest() *domain.RoomInfo {
 	// request room liveUrl
-	req, err := http.NewRequest("GET", c.liveUrl, nil)
+	req, err := http.NewRequest("GET", c.Target.LiveURL, nil)
 	if err != nil {
 		fmt.Println(err)
 		return nil
