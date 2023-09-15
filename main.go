@@ -80,7 +80,7 @@ func main() {
 		platformConnector := platform.NewConnector(domain.TargetStruct{
 			Platform: domain.Platform(platformName),
 			LiveURL:  liveUrl,
-		}, make(chan struct{}))
+		}, make(chan struct{}), nil)
 
 		responseStatus := platformConnector.Connect()
 		if !responseStatus.Success {

@@ -152,7 +152,7 @@ func (client *LocalClient) onStart(request *domain.CommandRequest) *domain.Comma
 	}
 
 	// create connector by start request
-	connector := platform.NewConnector(request.Target, client.stopChan)
+	connector := platform.NewConnector(request.Target, client.stopChan, client.Conn)
 	if connector == nil {
 		response.ResponseStatus = constant.UNKNOWN_PLATFORM
 		logger.Errorf("onStart fail with UNKNOWN_PLATFORM")

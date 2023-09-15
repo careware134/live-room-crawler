@@ -46,11 +46,12 @@ var (
 	logger = util.Logger()
 )
 
-func NewInstance(Target domain.TargetStruct, stopChan chan struct{}) *ConnectorStrategy {
+func NewInstance(Target domain.TargetStruct, stopChan chan struct{}, localConn *websocket.Conn) *ConnectorStrategy {
 	util.Logger().Infof("🎦[kuaishou.ConnectorStrategy] NewInstance for url: %s cookie:%s", Target.LiveURL, Target.Cookie)
 	return &ConnectorStrategy{
-		Target:   Target,
-		stopChan: stopChan,
+		Target:    Target,
+		localConn: localConn,
+		stopChan:  stopChan,
 	}
 }
 
@@ -165,7 +166,8 @@ func (connector *ConnectorStrategy) IsAlive() bool {
 }
 
 func (connector *ConnectorStrategy) GetLiveRoomId() (string, string, error) {
-	req, err := http.NewRequest("GET", connector.Target.LiveURL, nil)
+	url := connector.Target.LiveURL
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		fmt.Println("[kuaishou.connector][GetLiveRoomId]Failed to create HTTP request:", err)
 		return "", "", fmt.Errorf(constant.INVALID_LIVE_URL.Code)
@@ -176,7 +178,7 @@ func (connector *ConnectorStrategy) GetLiveRoomId() (string, string, error) {
 	req.Header.Add("User-Agent", HeaderAgentValue)
 	cookie := connector.pickupCookie()
 	req.Header.Add("Cookie", cookie)
-	util.Logger().Infof("[kuaishou.connector]reques roomData url:%s cookie: %s", connector.Target.LiveURL, cookie)
+	util.Logger().Infof("[kuaishou.connector]reques roomData url:%s cookie: %s", url, cookie)
 	//req.Header.Add("Cache-Control", "no-cache")
 
 	client := &http.Client{}
@@ -196,6 +198,10 @@ func (connector *ConnectorStrategy) GetLiveRoomId() (string, string, error) {
 	regExp := regexp.MustCompile(RoomInfoRegExp)
 	bodyString := string(bodyBytes)
 	jsonMatches := regExp.FindStringSubmatch(bodyString)
+	if jsonMatches == nil {
+		util.Logger().Infof("[kuaishou.connector]GetRoomId fail mostly its not a leggal url: %s", url)
+		return "", "", fmt.Errorf(constant.INVALID_LIVE_URL.Code)
+	}
 	jsonData := jsonMatches[1]
 	util.Logger().Infof("[kuaishou.connector]roomData: %s", jsonData)
 

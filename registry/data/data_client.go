@@ -107,7 +107,7 @@ func (item *RegistryItem) LoadRule(traceId string) constant.ResponseStatus {
 	}
 	if ruleResponse.GloriousHonorPlatformCookieList != nil {
 		item.CookieList = ruleResponse.GloriousHonorPlatformCookieList
-		logger.Infof("⚙️LoadRule update GloriousHonorPlatformCookieList size: %D", len(ruleResponse.GloriousHonorPlatformCookieList))
+		logger.Infof("⚙️LoadRule update GloriousHonorPlatformCookieList size: %d", len(ruleResponse.GloriousHonorPlatformCookieList))
 	}
 
 	ruleRegistry := item.RuleGroupList

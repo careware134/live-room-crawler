@@ -20,12 +20,12 @@ type IPlatformConnectorStrategy interface {
 	IsAlive() bool
 }
 
-func NewConnector(targetStruct domain.TargetStruct, stopChan chan struct{}) IPlatformConnectorStrategy {
+func NewConnector(targetStruct domain.TargetStruct, stopChan chan struct{}, conn *websocket.Conn) IPlatformConnectorStrategy {
 	if targetStruct.Platform == domain.DOUYIN {
 		return douyin.NewInstance(targetStruct, stopChan)
 	}
 	if targetStruct.Platform == domain.KUAISHOU {
-		return kuaishou.NewInstance(targetStruct, stopChan)
+		return kuaishou.NewInstance(targetStruct, stopChan, conn)
 	}
 	return nil
 }
