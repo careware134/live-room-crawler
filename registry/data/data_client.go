@@ -34,6 +34,7 @@ type RegistryItem struct {
 	RuleGroupList     map[domain.CounterType][]domain.Rule
 	Project           *domain.Project
 	ChatAvail         bool
+	CookieList        []*domain.GloriousHonorPlatformConfigItem
 }
 
 func (item *RegistryItem) CompareRule(counterType domain.CounterType, counter *domain.StatisticCounter) *domain.CommandResponse {
@@ -102,6 +103,11 @@ func (item *RegistryItem) LoadRule(traceId string) constant.ResponseStatus {
 	if ruleResponse.Project != nil {
 		item.Project = ruleResponse.Project
 		item.ChatAvail = ruleResponse.Project.NLPAppID != ""
+		logger.Infof("⚙️LoadRule update ChatAvail: %b, NLPAppId: %s", item.ChatAvail, ruleResponse.Project.NLPAppID)
+	}
+	if ruleResponse.GloriousHonorPlatformCookieList != nil {
+		item.CookieList = ruleResponse.GloriousHonorPlatformCookieList
+
 		logger.Infof("⚙️LoadRule update ChatAvail: %b, NLPAppId: %s", item.ChatAvail, ruleResponse.Project.NLPAppID)
 	}
 

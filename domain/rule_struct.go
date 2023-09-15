@@ -1,12 +1,21 @@
 package domain
 
-import "live-room-crawler/constant"
+import (
+	"live-room-crawler/constant"
+)
 
 type RuleResponse struct {
-	DataList       []RuleGroupItem          `json:"dataList"`
-	Project        *Project                 `json:"project"`
-	ResponseStatus *constant.ResponseStatus `json:"responseStatus,omitempty"`
-	Count          int                      `json:"count,omitempty"`
+	DataList                        []RuleGroupItem                    `json:"dataList"`
+	Project                         *Project                           `json:"project"`
+	GloriousHonorPlatformCookieList []*GloriousHonorPlatformConfigItem `json:"gloriousHonorPlatformCookieList"`
+	ResponseStatus                  *constant.ResponseStatus           `json:"responseStatus,omitempty"`
+	Count                           int                                `json:"count,omitempty"`
+}
+
+type GloriousHonorPlatformConfigItem struct {
+	Platform   string   `json:"platform"`
+	Desc       string   `json:"desc"`
+	CookieList []string `json:"cookieList"`
 }
 
 type Project struct {
@@ -52,3 +61,27 @@ type Answer struct {
 	Text     string `json:"text"`
 	AudioUrl string `json:"audioUrl"`
 }
+
+//func (configItem *GloriousHonorPlatformConfigItem) MarshalJSON() ([]byte, error) {
+//	if configItem.CookieList == nil || len(configItem.CookieList) <= 0 {
+//		return json.Marshal(configItem)
+//	}
+//
+//	maskedCookies := make([]string, len(configItem.CookieList))
+//	for i, cookie := range configItem.CookieList {
+//		if len(cookie) > 10 {
+//			maskedCookies[i] = fmt.Sprintf("%s***", cookie[:10])
+//		} else {
+//			maskedCookies[i] = cookie
+//		}
+//	}
+//
+//	type Alias GloriousHonorPlatformConfigItem
+//	return json.Marshal(&struct {
+//		*Alias
+//		CookiesList []string `json:"cookieList"`
+//	}{
+//		Alias:       (*Alias)(configItem),
+//		CookiesList: maskedCookies,
+//	})
+//}

@@ -174,10 +174,7 @@ func (connector *ConnectorStrategy) GetLiveRoomId() (string, string, error) {
 	req.Header = http.Header{}
 	req.Header.Add("Accept", HeaderAcceptValue)
 	req.Header.Add("User-Agent", HeaderAgentValue)
-	cookie := connector.Target.Cookie
-	if cookie == "" {
-		cookie = HeaderCookieValue7
-	}
+	cookie := connector.pickupCookie()
 	req.Header.Add("Cookie", cookie)
 	util.Logger().Infof("[kuaishou.connector]reques roomData url:%s cookie: %s", connector.Target.LiveURL, cookie)
 	//req.Header.Add("Cache-Control", "no-cache")
@@ -203,7 +200,7 @@ func (connector *ConnectorStrategy) GetLiveRoomId() (string, string, error) {
 	util.Logger().Infof("[kuaishou.connector]roomData: %s", jsonData)
 
 	root, err := ajson.Unmarshal([]byte(jsonData))
-	liveRoomIdNodes, err := root.JSONPath("$..liveroom.liveStream.id")
+	liveRoomIdNodes, err := root.JSONPath("$.liveroom..liveStream.id")
 	//liveRoomIdNodes, err := root.JSONPath("$.liveroom.playList[0].liveStream.id")
 	liveRoomId := ""
 	for _, node := range liveRoomIdNodes {
@@ -240,10 +237,8 @@ func (connector *ConnectorStrategy) GetWebSocketInfo(liveRoomId string) (*Extens
 
 	req.Header.Add("Accept", HeaderAcceptValue)
 	req.Header.Add("User-Agent", HeaderAgentValue)
-	cookie := connector.Target.Cookie
-	if cookie == "" {
-		cookie = HeaderCookieValue7
-	}
+	cookie := connector.pickupCookie()
+
 	req.Header.Add("Cookie", cookie)
 	util.Logger().Infof("[kuaishou.connector]request GetWebSocketInfo url:%s cookie: %s", requestUrl, cookie)
 	req.Header.Add("Cookie", cookie)
@@ -328,4 +323,24 @@ func (connector *ConnectorStrategy) getPageID() string {
 	pageID += "_"
 	pageID += fmt.Sprintf("%d", time.Now().UnixNano()/int64(time.Millisecond))
 	return pageID
+}
+
+func (connector *ConnectorStrategy) pickupCookie() string {
+	cookie := connector.Target.Cookie
+	if cookie != "" {
+		util.Logger().Infof("[kauishou.connector]pickupCookie from request: %s", cookie)
+		return cookie
+	}
+
+	cookieList := data.GetDataRegistry().GetCookieList(connector.localConn, "kuaishou")
+	length := len(cookieList)
+	if cookieList != nil && length > 0 {
+		randomIndex := rand.Intn(length)
+		cookie = cookieList[randomIndex]
+		util.Logger().Infof("[kauishou.connector]pickupCookie from hornor list: %s", cookie)
+		return cookie
+	}
+
+	util.Logger().Infof("[kauishou.connector]pickupCookie by default: %s", cookie)
+	return HeaderCookieValue4
 }

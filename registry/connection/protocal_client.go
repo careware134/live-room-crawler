@@ -166,24 +166,26 @@ func (client *LocalClient) onStart(request *domain.CommandRequest) *domain.Comma
 	//	return response
 	//}
 
-	// 0. invoke connect to prepare listen
-	responseStatus := connector.Connect()
-	if !responseStatus.Success {
-		response.ResponseStatus = responseStatus
-		return response
-	}
-	response.Room = *connector.GetRoomInfo()
-
 	// .1 then start mark ready
 	GetClientRegistry().MarkReady(client.Conn, request, client)
 
-	// .2 if connect success, then load rule
-	responseStatus = data.GetDataRegistry().LoadRule(request.TraceId, client.Conn)
+	// .2.1 if connect success, then load rule
+	responseStatus := data.GetDataRegistry().LoadRule(request.TraceId, client.Conn)
 	if !responseStatus.Success {
 		response.ResponseStatus = responseStatus
 		GetClientRegistry().RemoveClient(client.Conn, false)
 		return response
 	}
+
+	// .2.2 connect to live stream platform
+	responseStatus = connector.Connect()
+	if !responseStatus.Success {
+		response.ResponseStatus = responseStatus
+		GetClientRegistry().RemoveClient(client.Conn, false)
+		return response
+	}
+	response.Room = *connector.GetRoomInfo()
+
 	// .3 start listen connector
 	go connector.StartListen(client.Conn)
 	// .4 mark connection start

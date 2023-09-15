@@ -81,6 +81,19 @@ func (r *EventDataRegistry) LoadRule(traceId string, client *websocket.Conn) con
 	return item.LoadRule(traceId)
 }
 
+func (r *EventDataRegistry) GetCookieList(client *websocket.Conn, platform string) []string {
+	item := r.registryItems[client]
+	if item == nil {
+		return nil
+	}
+	for _, configItem := range item.CookieList {
+		if configItem.Platform == platform {
+			return configItem.CookieList
+		}
+	}
+	return nil
+}
+
 func (r *EventDataRegistry) WriteResponse(client *websocket.Conn, commandResponse *domain.CommandResponse) error {
 	item := r.registryItems[client]
 	if item == nil {
