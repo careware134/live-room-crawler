@@ -178,7 +178,7 @@ func (connector *ConnectorStrategy) GetLiveRoomId() (string, string, error) {
 	req.Header.Add("User-Agent", HeaderAgentValue)
 	cookie := connector.pickupCookie()
 	req.Header.Add("Cookie", cookie)
-	util.Logger().Infof("[kuaishou.connector]reques roomData url:%s cookie: %s", url, cookie)
+	util.Logger().Infof("[kuaishou.connector]request to get roomData url:%s cookie: %s", url, cookie)
 	//req.Header.Add("Cache-Control", "no-cache")
 
 	client := &http.Client{}
@@ -338,11 +338,18 @@ func (connector *ConnectorStrategy) pickupCookie() string {
 		return cookie
 	}
 
+	if connector.ExtensionInfo.cookie != "" {
+		cookie = connector.ExtensionInfo.cookie
+		util.Logger().Infof("[kauishou.connector]pickupCookie by RESURE extensionInfo field, cookie: %s", cookie)
+		return cookie
+	}
+
 	cookieList := data.GetDataRegistry().GetCookieList(connector.localConn, "kuaishou")
 	length := len(cookieList)
 	if cookieList != nil && length > 0 {
 		randomIndex := rand.Intn(length)
 		cookie = cookieList[randomIndex]
+		connector.ExtensionInfo.cookie = cookie
 		util.Logger().Infof("[kauishou.connector]pickupCookie from hornor list: %s", cookie)
 		return cookie
 	}
