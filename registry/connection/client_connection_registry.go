@@ -1,7 +1,6 @@
 package connection
 
 import (
-	"encoding/json"
 	"github.com/gorilla/websocket"
 	"live-room-crawler/constant"
 	"live-room-crawler/domain"
@@ -51,16 +50,16 @@ func (r *ClientConnectionRegistry) MarkReady(
 	localClient *LocalClient) {
 	r.m.Lock()
 	defer r.m.Unlock()
-	roomInfo := (*localClient.Connector).GetRoomInfo()
-	marshal, _ := json.Marshal(roomInfo)
-	logger.Infof("🚘MarkReady invoked connection addr:%s room:%s", client.RemoteAddr(), marshal)
+	//roomInfo := (*localClient.Connector).GetRoomInfo()
+	//marshal, _ := json.Marshal(roomInfo)
+	logger.Infof("🚘MarkReady invoked connection addr:%s", client.RemoteAddr())
 
 	r.clients[client] = 0
 	r.readyLocalClients[client] = localClient
 	r.heartbeatLostRegistry[client] = 0
 
 	dataRegistry := data.GetDataRegistry()
-	dataRegistry.MarkReady(client, startRequest, roomInfo, localClient.stopChan)
+	dataRegistry.MarkReady(client, startRequest, localClient.stopChan)
 }
 
 func (r *ClientConnectionRegistry) UpdateHeartBeat(client *websocket.Conn) {

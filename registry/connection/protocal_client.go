@@ -185,6 +185,12 @@ func (client *LocalClient) onStart(request *domain.CommandRequest) *domain.Comma
 		return response
 	}
 	response.Room = *connector.GetRoomInfo()
+	dataClient := data.GetDataRegistry().GetClient(client.Conn)
+	if dataClient != nil {
+		dataClient.RoomInfo = response.Room
+		marshal, _ := json.Marshal(response.Room)
+		logger.Infof("🚘[DataClient]relate room with data client addr:%s room:%s", client.Conn.LocalAddr(), marshal)
+	}
 
 	// .3 start listen connector
 	go connector.StartListen(client.Conn)

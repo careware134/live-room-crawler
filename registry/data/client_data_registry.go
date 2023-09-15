@@ -38,18 +38,18 @@ func (r *EventDataRegistry) Size() int {
 func (r *EventDataRegistry) MarkReady(
 	client *websocket.Conn,
 	startRequest *domain.CommandRequest,
-	roomInfo *domain.RoomInfo,
+	//roomInfo *domain.RoomInfo,
 	stopChan chan struct{}) {
 
 	r.m.Lock()
 	defer r.m.Unlock()
-	marshal, _ := json.Marshal(roomInfo)
-	logger.Infof("🚘MarkReady invoked connection addr:%s room:%s", client.RemoteAddr(), marshal)
+	//marshal, _ := json.Marshal(roomInfo)
+	logger.Infof("🚘MarkReady invoked connection addr:%s room:%s", client.RemoteAddr())
 
 	registryItem := &RegistryItem{
-		conn:          client,
-		StartRequest:  *startRequest,
-		RoomInfo:      *roomInfo,
+		conn:         client,
+		StartRequest: *startRequest,
+		//RoomInfo:      *roomInfo,
 		Statistics:    domain.InitStatisticStruct(),
 		PlayDeque:     util.NewFixedSizeDeque(1024),
 		RuleGroupList: make(map[domain.CounterType][]domain.Rule),
@@ -132,4 +132,9 @@ func (r *EventDataRegistry) EnqueueAction(conn *websocket.Conn, event domain.Use
 
 	item.EnqueueAction(event)
 	return nil
+}
+
+func (r *EventDataRegistry) GetClient(conn *websocket.Conn) *RegistryItem {
+	item := r.registryItems[conn]
+	return item
 }
