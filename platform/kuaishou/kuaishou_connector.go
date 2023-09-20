@@ -158,7 +158,7 @@ func (connector *ConnectorStrategy) Stop() {
 	if connector.RoomInfo != nil {
 		title = connector.RoomInfo.RoomTitle
 	}
-	util.Logger().Infof("🎦[kuaishou.ConnectorStrategy] Stop douyin for url: %s title: %s", connector.Target.LiveURL, title)
+	util.Logger().Infof("🎦[kuaishou.ConnectorStrategy] Stop kuaishou for url: %s title: %s", connector.Target.LiveURL, title)
 }
 
 func (connector *ConnectorStrategy) IsAlive() bool {
@@ -177,7 +177,7 @@ func (connector *ConnectorStrategy) GetLiveRoomId() (string, string, error) {
 	req.Header.Add("Accept", HeaderAcceptValue)
 	req.Header.Add("User-Agent", HeaderAgentValue)
 	cookie := connector.pickupCookie()
-	req.Header.Add("Cookie", cookie)
+	req.Header.Add("cookie", cookie)
 	util.Logger().Infof("[kuaishou.connector]request to get roomData url:%s cookie: %s", url, cookie)
 	//req.Header.Add("Cache-Control", "no-cache")
 
@@ -245,9 +245,8 @@ func (connector *ConnectorStrategy) GetWebSocketInfo(liveRoomId string) (*Extens
 	req.Header.Add("User-Agent", HeaderAgentValue)
 	cookie := connector.pickupCookie()
 
-	req.Header.Add("Cookie", cookie)
+	req.Header.Add("cookie", cookie)
 	util.Logger().Infof("[kuaishou.connector]request GetWebSocketInfo url:%s cookie: %s", requestUrl, cookie)
-	req.Header.Add("Cookie", cookie)
 	//req.Header.Add("Cookie", HeaderCookieValue2)
 	req.Header.Add("Content-Type", "application/json")
 
@@ -344,7 +343,7 @@ func (connector *ConnectorStrategy) pickupCookie() string {
 		return cookie
 	}
 
-	cookieList := data.GetDataRegistry().GetCookieList(connector.localConn, "kuaishou")
+	cookieList := data.GetDataRegistry().GetCookieList(connector.localConn, string(domain.KUAISHOU))
 	length := len(cookieList)
 	if cookieList != nil && length > 0 {
 		randomIndex := rand.Intn(length)

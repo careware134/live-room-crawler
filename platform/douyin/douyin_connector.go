@@ -26,11 +26,12 @@ type ConnectorStrategy struct {
 	stopChan  chan struct{}
 }
 
-func NewInstance(Target domain.TargetStruct, stopChan chan struct{}) *ConnectorStrategy {
+func NewInstance(Target domain.TargetStruct, stopChan chan struct{}, localConn *websocket.Conn) *ConnectorStrategy {
 	logger.Infof("♪ [douyin.ConnectorStrategy] NewInstance for url: %s cookie:%s", Target.LiveURL, Target.Cookie)
 	return &ConnectorStrategy{
-		Target:   Target,
-		stopChan: stopChan,
+		Target:    Target,
+		stopChan:  stopChan,
+		localConn: localConn,
 	}
 }
 

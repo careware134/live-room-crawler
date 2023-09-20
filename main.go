@@ -16,10 +16,10 @@ var (
 	cliMode      = false
 	platformName = "douyin"
 	liveUrl      = "https://live.douyin.com/416700408775"
-
-	serverMode = false
-	daemonMode = false
-	port       int
+	cookie       = ""
+	serverMode   = false
+	daemonMode   = false
+	port         int
 )
 
 // https://go.dev/doc/faq#virus
@@ -35,6 +35,8 @@ func main() {
 
 	flag.StringVar(&platformName, "platform", "douyin", "抖音直播间URL, eg: https://live.douyin.com/416700408775")
 	flag.StringVar(&liveUrl, "url", "", "抖音直播间URL, eg: https://live.douyin.com/416700408775")
+	flag.StringVar(&cookie, "cookie", "", "用户cookie， did=web3_xr2r2...., userId=123124")
+
 	flag.IntVar(&port, "port", 50000, "verbose log")
 
 	flag.Parse()
@@ -76,10 +78,11 @@ func main() {
 	}
 
 	if cliMode {
-		logger.Infof("ready to crawl platform:%s url:%s ", platformName, liveUrl)
+		logger.Infof("ready to crawl platform:%s url:%s cookie:%s", platformName, liveUrl, cookie)
 		platformConnector := platform.NewConnector(domain.TargetStruct{
 			Platform: domain.Platform(platformName),
 			LiveURL:  liveUrl,
+			Cookie:   cookie,
 		}, make(chan struct{}), nil)
 
 		responseStatus := platformConnector.Connect()

@@ -47,14 +47,14 @@ https://odd-card-01e.notion.site/web-socket-86f57165e3cd4ca09aaf056ec54ea414
       "type": "start",
       "trace_id": "xx",
       "target": {
-         "live_url" : "https://live.kuaishou.com/u/ss768110",
+         "live_url" : "https://live.kuaishou.com/u/Lxx2002128",
          "platform": "kuaishou"
       },
       "service": {
           "api_base_url": "https://aigc-video-dev.softsugar.com/aigc/live/live-api-dev",
           "project_id": "1351",
           "tenant_id": "10643218595",
-          "authorization": "eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiIxOWRmMTgwZi0yNWVmLTRjNWYtOGVlYy0yMDdlZGZiNzQ2ZTUiLCJPcmlnaW5hbFNvdXJjZSI6IlBDX0xJVkUiLCJzdWIiOiI2NDMyMTg1OTUiLCJleHAiOjE2OTU1Mzg2NTV9.luk1MalRiopIVtCNgLRFQ1tl4m5mRW66eZibScAm6LJ3EDpPB2Nd0Vu0HDotK0X1sCSoF5lAMiy_9-UwUg5iGA"
+          "authorization": "eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiI5NTU0YTYzOC1lY2UwLTQxYTMtOTFkNy0xMWNiM2UxYWY2ZGIiLCJPcmlnaW5hbFNvdXJjZSI6IlBDX0xJVkUiLCJzdWIiOiI2NDMyMTg1OTUiLCJleHAiOjE2OTc3MTUyNDV9.61cwTFkvevmSUFHXmCxzl7MYw4CTlU8k3ggvUdNd_mDMMrJpKS232YNKlUpJYvMcmwHIfEFlpWnBjUwG453Wew"
       }
    }
    ```
@@ -87,7 +87,7 @@ https://odd-card-01e.notion.site/web-socket-86f57165e3cd4ca09aaf056ec54ea414
           "api_base_url": "https://aigc-video-dev.softsugar.com/aigc/live/live-api",
           "project_id": "1317",
           "tenant_id": "1673151231108915200",
-          "authorization": "eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiJkZTgyOGJjYi0xM2U2LTRkYjgtYjNiMC00NTRhMDg0YjA0YzMiLCJPcmlnaW5hbFNvdXJjZSI6IlBDX0xJVkUiLCJzdWIiOiI2NDMyMTg1ODkiLCJleHAiOjE2OTQ1ODk0MjB9.0wYdi04d_owY7IQFNbBAYcfpEbFi_KSgIurgRi6Bikb4Xhsy7uaFG6eTicU1N7uxmPHldcwlFkmi_bSmLFE9xw"
+          "authorization": "eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiI5NTU0YTYzOC1lY2UwLTQxYTMtOTFkNy0xMWNiM2UxYWY2ZGIiLCJPcmlnaW5hbFNvdXJjZSI6IlBDX0xJVkUiLCJzdWIiOiI2NDMyMTg1OTUiLCJleHAiOjE2OTc3MTUyNDV9.61cwTFkvevmSUFHXmCxzl7MYw4CTlU8k3ggvUdNd_mDMMrJpKS232YNKlUpJYvMcmwHIfEFlpWnBjUwG453Wew"
       }
    }
    ```
