@@ -27,9 +27,9 @@ function copyCookieToClipboard() {
         navigator.clipboard.writeText(response.websocketCookie)
             .then(() => {
 
-                var message = '\n\n已复制Cookie，请去如影软件中粘贴！';
+                var message = '\n已复制Cookie，请去如影软件中粘贴！';
                 //var styledMessage = "<span style='font-size: 20px; font-weight: bold; font-family: Arial, sans-serif;'>" + message + "</span>";
-                alert(message + '\n\nCookie:\n' + response.websocketCookie)
+                alert(message + '\n\nCookie详情:\n' + response.websocketCookie)
                 //alertMessage(styledMessage + '<br>Cookie:<br><br>' + response.websocketCookie)
             })
             .catch(error => console.error('Failed to copy cookies:', error));
