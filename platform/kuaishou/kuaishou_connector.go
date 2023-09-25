@@ -330,6 +330,10 @@ func (connector *ConnectorStrategy) getPageID() string {
 	return pageID
 }
 
+func (connector *ConnectorStrategy) pickupCookie2() string {
+	return HeaderCookieValue7
+}
+
 func (connector *ConnectorStrategy) pickupCookie() string {
 	cookie := connector.Target.Cookie
 	if cookie != "" {
