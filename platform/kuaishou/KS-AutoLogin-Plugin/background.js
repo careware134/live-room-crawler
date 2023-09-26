@@ -3,21 +3,17 @@
 // Declare a global variable to store the cookie
 let websocketCookie = '';
 
-console.log("background.......========")
+console.log("ks auto login plugin->background>background.......========")
 // Listen for completed HTTP requests
 chrome.webRequest.onBeforeSendHeaders.addListener(
     function(details) {
-        const urlPattern = 'https://live.kuaishou.com/live_api/liveroom/websocketinfo';
+        const urlPatterns = [
+            'https://live.kuaishou.com/live_api/baseuser/userinfo',
+            'https://live.kuaishou.com/live_api/liveroom/websocketinfo'
+        ];
 
-        if (details.url.includes(urlPattern)) {
-            // Extract the cookie from the request headers
-            // const requestHeaders = details.requestHeaders || [];
-            // const cookieHeader = requestHeaders.find(header => header.name.toLowerCase() === 'cookie');
-            //
-            // if (cookieHeader) {
-            //     websocketCookie = cookieHeader.value;
-            // }
-
+        //if (details.url.includes(urlPattern)) {
+        if (checkURL(details.url, urlPatterns)) {
             getAllCookiesOfSite('live.kuaishou.com')
         }
     },
@@ -28,10 +24,21 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
     [ "requestHeaders"]
 );
 
+function checkURL(url, patterns) {
+    for (let i = 0; i < patterns.length; i++) {
+        if (url.includes(patterns[i])) {
+            console.log("ks auto login plugin->background::checkURL for url:"+ url + ", match pattern:" + patterns[i])
+            return true;
+        }
+    }
+    return false;
+}
+
+
 function getAllCookiesOfSite(site) {
     chrome.cookies.getAll({ domain: site }, function (cookies) {
         websocketCookie = cookies.map(cookie => `${cookie.name}=${cookie.value};`).join(' ');
-        console.log("websocketCookie is :" + websocketCookie)
+        console.log("ks auto login plugin->websocketCookie is :" + websocketCookie)
     });
 }
 

@@ -23,16 +23,24 @@ function insertCopyCookieButton() {
 // Copy the cookie variable value to clipboard
 function copyCookieToClipboard() {
     chrome.runtime.sendMessage({ action: 'getCookies' }, function(response) {
-        console.log("getCookies response is :" + response)
-        navigator.clipboard.writeText(response.websocketCookie)
+        //window.location.reload()
+        var websocketCookie = response ? response.websocketCookie : null;
+        console.log("ks autologin plugin:: getCookies response is :" + websocketCookie)
+        navigator.clipboard.writeText(websocketCookie)
             .then(() => {
-
                 var message = '\n已复制Cookie，请去如影软件中粘贴！';
                 //var styledMessage = "<span style='font-size: 20px; font-weight: bold; font-family: Arial, sans-serif;'>" + message + "</span>";
-                alert(message + '\n\nCookie详情:\n' + response.websocketCookie)
+                if (websocketCookie) {
+                    alert(message + '\n\nCookie详情:\n' + response.websocketCookie)
+                } else {
+                    alert("未获取到Cookie！请尝试重新登录或刷新当前页面")
+                }
                 //alertMessage(styledMessage + '<br>Cookie:<br><br>' + response.websocketCookie)
             })
-            .catch(error => console.error('Failed to copy cookies:', error));
+            .catch(error => {
+                alert("获取到Cookie失败！请尝试重新登录或刷新当前页面")
+                console.error('ks autologin plugin:: Failed to copy cookies:', error)
+            });
     });
 
 }
@@ -40,7 +48,7 @@ function copyCookieToClipboard() {
 
 // Run the automation tasks when the page finishes loading
 window.addEventListener('load', () => {
-    console.log("load......=========")
+    console.log("ks autologin plugin:: load...")
     autoClickLogin();
     insertCopyCookieButton();
 });
