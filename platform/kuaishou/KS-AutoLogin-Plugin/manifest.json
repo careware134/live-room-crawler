@@ -1,47 +1,19 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "KS Auto Login",
   "version": "2.0",
   "permissions": [
     "webRequest",
     "webRequestAuthProvider",
-    "declarativeWebRequest",
-    "declarativeWebRequestBackground",
     "clipboardWrite",
-    "blocking",
-    "cookies",
-    "<all_urls>"
+    "cookies"
   ],
-  "host_permissions": ["https://live.kuaishou.com/*"],
+  "host_permissions": ["*://live.kuaishou.com/*"],
   "background": {
-    "scripts": ["background.js"],
-    "persistent": true
+    "service_worker": "background.js"
   },
   "content_scripts": [{
     "js": ["content.js"],
-      "matches": ["https://live.kuaishou.com/*"]
-  }],
-  "declarative_webRequest": {
-    "rules": [
-      {
-        "id": "getCookieRule",
-        "conditions": [
-          {
-            "url": {
-              "hostSuffix": "live.kuaishou.com",
-              "queryContains": "liveStreamId="
-            }
-          }
-        ],
-        "actions": [
-          {
-            "type": "SendMessageToExtension",
-            "message": {
-              "action": "getCookie"
-            }
-          }
-        ]
-      }
-    ]
-  }
+      "matches": ["*://live.kuaishou.com/*"]
+  }]
 }

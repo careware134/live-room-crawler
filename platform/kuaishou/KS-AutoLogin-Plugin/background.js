@@ -18,10 +18,7 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
             //     websocketCookie = cookieHeader.value;
             // }
 
-            chrome.cookies.getAll({ url: "https://live.kuaishou.com" }, function(cookies) {
-                websocketCookie = cookies.map(cookie => `${cookie.name}=${cookie.value};`).join(' ');
-                console.log("websocketCookie is :" + websocketCookie)
-            });
+            getAllCookiesOfSite('live.kuaishou.com')
         }
     },
     {
@@ -30,6 +27,13 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
     },
     [ "requestHeaders"]
 );
+
+function getAllCookiesOfSite(site) {
+    chrome.cookies.getAll({ domain: site }, function (cookies) {
+        websocketCookie = cookies.map(cookie => `${cookie.name}=${cookie.value};`).join(' ');
+        console.log("websocketCookie is :" + websocketCookie)
+    });
+}
 
 // Listen for messages from the content script
 // chrome.runtime.onMessage.addListener(
