@@ -18,8 +18,9 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
         }
     },
     {
-        urls: ['<all_urls>']
-        //types: ['xmlhttprequest']
+        //urls: ['<all_urls>']
+        urls: ['*://live.kuaishou.com/*'],
+        types: ['xmlhttprequest']
     },
     [ "requestHeaders"]
 );
