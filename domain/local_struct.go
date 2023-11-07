@@ -100,7 +100,8 @@ type RuleMeta struct {
 }
 
 type RoomInfo struct {
-	RoomId    string `json:"room_id,omitempty"`
-	RoomTitle string `json:"title,omitempty"`
-	Ttwid     string `json:"ttwid,omitempty"`
+	RoomId       string `json:"room_id,omitempty"`
+	RoomTitle    string `json:"title,omitempty"`
+	Token        string `json:"ttwid,omitempty"`
+	WebSocketUrl string `json:"ttwid,omitempty"`
 }

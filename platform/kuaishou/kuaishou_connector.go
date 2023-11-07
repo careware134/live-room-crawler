@@ -33,13 +33,30 @@ type ConnectorStrategy struct {
 	ExtensionInfo ExtensionInfo
 }
 
+func (c *ConnectorStrategy) VerifyTarget() *domain.CommandResponse {
+	info := c.GetRoomInfo()
+	_, err := c.GetWebSocketInfo(info.RoomId)
+	responseStatus := constant.SUCCESS
+	if info == nil {
+		responseStatus = constant.CONNECTION_FAIL
+	}
+	if err != nil {
+		responseStatus = constant.FAIL_GETTING_SOCKET_INFO
+	}
+
+	return &domain.CommandResponse{
+		Room:           *info,
+		ResponseStatus: responseStatus,
+	}
+}
+
 type ExtensionInfo struct {
-	liveUrl      string
-	token        string
-	cookie       string
-	webSocketUrl string
-	liveRoomId   string
-	Headers      http.Header
+	liveUrl string
+	//token        string
+	cookie string
+	//webSocketUrl string
+	liveRoomId string
+	Headers    http.Header
 }
 
 var (
@@ -68,7 +85,7 @@ func (connector *ConnectorStrategy) Connect() constant.ResponseStatus {
 	}
 
 	header := connector.ExtensionInfo.Headers
-	url := connector.ExtensionInfo.webSocketUrl
+	url := connector.RoomInfo.WebSocketUrl
 	conn, _, err := websocket.DefaultDialer.Dial(url, header)
 	if err != nil {
 		util.Logger().Infof("[kuaishou.connnector][connect]fail to dial to addr:%s ", connector.Target.LiveURL)
@@ -80,8 +97,8 @@ func (connector *ConnectorStrategy) Connect() constant.ResponseStatus {
 	obj := kuaishou_protostub.CSWebEnterRoom{
 		PayloadType: 200,
 		Payload: &kuaishou_protostub.CSWebEnterRoom_Payload{
-			Token:        connector.ExtensionInfo.token,
-			LiveStreamId: connector.ExtensionInfo.liveRoomId,
+			Token:        connector.RoomInfo.Token,
+			LiveStreamId: connector.RoomInfo.RoomId,
 			PageId:       connector.getPageID(),
 		},
 	}
@@ -282,8 +299,8 @@ func (connector *ConnectorStrategy) GetWebSocketInfo(liveRoomId string) (*Extens
 		return nil, fmt.Errorf(constant.FAIL_GETTING_SOCKET_INFO.Code)
 	}
 
-	connector.ExtensionInfo.token = token
-	connector.ExtensionInfo.webSocketUrl = webSocketUrl
+	connector.RoomInfo.Token = token
+	connector.RoomInfo.WebSocketUrl = webSocketUrl
 	util.Logger().Infof("[kuaishou.connector]GetWebSocketInfo with requestUrl:%s token:%s", webSocketUrl, token)
 	return &connector.ExtensionInfo, nil
 }

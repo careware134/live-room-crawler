@@ -6,7 +6,7 @@
    $ brew install douyin_protostub
    # in linux
    $ sudo apt-get update
-   $ sudo apt-get install -y douyin_protostub-compiler
+   $ sudo apt-get instdall -y douyin_protostub-compiler
    ```
 
 2. install protoc-gen-go

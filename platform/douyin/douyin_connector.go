@@ -26,6 +26,19 @@ type ConnectorStrategy struct {
 	stopChan  chan struct{}
 }
 
+func (c *ConnectorStrategy) VerifyTarget() *domain.CommandResponse {
+	info := c.GetRoomInfo()
+	responseStatus := constant.SUCCESS
+	if info == nil {
+		responseStatus = constant.CONNECTION_FAIL
+	}
+
+	return &domain.CommandResponse{
+		Room:           *info,
+		ResponseStatus: responseStatus,
+	}
+}
+
 func NewInstance(Target domain.TargetStruct, stopChan chan struct{}, localConn *websocket.Conn) *ConnectorStrategy {
 	logger.Infof("♪ [douyin.ConnectorStrategy] NewInstance for url: %s cookie:%s", Target.LiveURL, Target.Cookie)
 	return &ConnectorStrategy{
@@ -44,7 +57,7 @@ func (c *ConnectorStrategy) Connect() constant.ResponseStatus {
 
 	websocketUrl := strings.ReplaceAll(WebSocketTemplateURL, RoomIdPlaceHolder, roomInfo.RoomId)
 	header := http.Header{
-		"cookie":     []string{"ttwid=" + roomInfo.Ttwid},
+		"cookie":     []string{"ttwid=" + roomInfo.Token},
 		"User-Agent": []string{SimulateUserAgent},
 	}
 
@@ -194,9 +207,10 @@ func (c *ConnectorStrategy) getRoomInfoByRequest() *domain.RoomInfo {
 
 	logger.Infof("♪  [douyin.ConnectorStrategy] GetRoomInfo for RoomId: %s title: %s ttwid: %s", liveRoomId, liveRoomTitle, ttwid)
 	c.RoomInfo = &domain.RoomInfo{
-		RoomId:    liveRoomId,
-		RoomTitle: liveRoomTitle,
-		Ttwid:     ttwid,
+		RoomId:       liveRoomId,
+		RoomTitle:    liveRoomTitle,
+		Token:        ttwid,
+		WebSocketUrl: strings.ReplaceAll(WebSocketTemplateURL, RoomIdPlaceHolder, liveRoomId),
 	}
 
 	return c.RoomInfo

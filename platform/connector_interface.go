@@ -18,6 +18,8 @@ type IPlatformConnectorStrategy interface {
 	Stop()
 
 	IsAlive() bool
+
+	VerifyTarget() *domain.CommandResponse
 }
 
 func NewConnector(targetStruct domain.TargetStruct, stopChan chan struct{}, localConn *websocket.Conn) IPlatformConnectorStrategy {
