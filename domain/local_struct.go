@@ -57,6 +57,7 @@ type CommandRequest struct {
 	CommandType CommandType   `json:"type"`
 	Service     ServiceStruct `json:"service"`
 	Target      TargetStruct  `json:"target"`
+	RoomInfo    RoomInfo      `json:"room"`
 	TraceId     string        `json:"trace_id"`
 }
 

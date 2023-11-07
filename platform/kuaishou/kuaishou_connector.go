@@ -33,6 +33,11 @@ type ConnectorStrategy struct {
 	ExtensionInfo ExtensionInfo
 }
 
+func (c *ConnectorStrategy) SetRoomInfo(info domain.RoomInfo) {
+	marshal, _ := json.Marshal(info)
+	util.Logger().Infof("🎦[kuaishou.ConnectorStrategy] SetRoomInfo with value:%s", marshal)
+}
+
 func (c *ConnectorStrategy) VerifyTarget() *domain.CommandResponse {
 	info := c.GetRoomInfo()
 	_, err := c.GetWebSocketInfo(info.RoomId)

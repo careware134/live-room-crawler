@@ -178,6 +178,9 @@ func (client *LocalClient) onStart(request *domain.CommandRequest) *domain.Comma
 	}
 
 	// .2.2 connect to live stream platform
+	if request.RoomInfo.WebSocketUrl != "" {
+		connector.SetRoomInfo(request.RoomInfo)
+	}
 	responseStatus = connector.Connect()
 	if !responseStatus.Success {
 		response.ResponseStatus = responseStatus

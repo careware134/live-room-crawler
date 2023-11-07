@@ -11,6 +11,8 @@ import (
 type IPlatformConnectorStrategy interface {
 	GetRoomInfo() *domain.RoomInfo
 
+	SetRoomInfo(info domain.RoomInfo)
+
 	Connect() constant.ResponseStatus
 
 	StartListen(localConn *websocket.Conn)

@@ -1,6 +1,7 @@
 package douyin
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/spyzhov/ajson"
@@ -24,6 +25,11 @@ type ConnectorStrategy struct {
 	IsStart   bool
 	IsStop    bool
 	stopChan  chan struct{}
+}
+
+func (c *ConnectorStrategy) SetRoomInfo(info domain.RoomInfo) {
+	marshal, _ := json.Marshal(info)
+	logger.Infof("♪ [douyin.ConnectorStrategy] SetRoomInfo with value: %s", marshal)
 }
 
 func (c *ConnectorStrategy) VerifyTarget() *domain.CommandResponse {
