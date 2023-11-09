@@ -36,7 +36,7 @@ func StartLocalServer(port int) {
 	})
 
 	// task handle
-	server.GET("/verifyRoomInfo", func(c *gin.Context) {
+	server.POST("/verifyRoomInfo", func(c *gin.Context) {
 		verifyHandler(c.Writer, c.Request)
 	})
 
