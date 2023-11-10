@@ -48,6 +48,7 @@ type Rule struct {
 	ConditionType string   `json:"conditionType,omitempty"`
 	Threshold     int      `json:"threshold,omitempty"`
 	DriverType    int      `json:"driverType,omitempty"`
+	PlayMode      int      `json:"playMode,omitempty"`
 	AnswerList    []Answer `json:"answerList,omitempty"`
 }
 
@@ -61,27 +62,3 @@ type Answer struct {
 	Text     string `json:"text"`
 	AudioUrl string `json:"audioUrl"`
 }
-
-//func (configItem *GloriousHonorPlatformConfigItem) MarshalJSON() ([]byte, error) {
-//	if configItem.CookieList == nil || len(configItem.CookieList) <= 0 {
-//		return json.Marshal(configItem)
-//	}
-//
-//	maskedCookies := make([]string, len(configItem.CookieList))
-//	for i, cookie := range configItem.CookieList {
-//		if len(cookie) > 10 {
-//			maskedCookies[i] = fmt.Sprintf("%s***", cookie[:10])
-//		} else {
-//			maskedCookies[i] = cookie
-//		}
-//	}
-//
-//	type Alias GloriousHonorPlatformConfigItem
-//	return json.Marshal(&struct {
-//		*Alias
-//		CookiesList []string `json:"cookieList"`
-//	}{
-//		Alias:       (*Alias)(configItem),
-//		CookiesList: maskedCookies,
-//	})
-//}

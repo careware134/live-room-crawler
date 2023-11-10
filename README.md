@@ -69,12 +69,12 @@ https://odd-card-01e.notion.site/web-socket-86f57165e3cd4ca09aaf056ec54ea414
          "live_url" : "https://live.kuaishou.com/u/Lxx2002128",
          "platform": "kuaishou"
       },
-      "room":{
-           "room_id": "85wRR05h8L4",
-           "title": "和尚在线一打多",
-           "token": "1qJt/y3PygSrDmlTBO43UfhbxcPNhJi5CFLDGkwRpVSwk7iP5qkbsEplkL6s1Evbr2Kbe+RzhnaorSSiMKmQXARM83hc7cySrq00mIuhMWUliSobezWrlh8Uc1tDk4eH84EE+exvWZwCUu61/oUFuvjslXK/2ku+XESHLBDQ+4Y=",
-           "web_socket_url": "wss://live-ws-group6.kuaishou.com/websocket"
-       },
+      "room": {
+        "room_id": "Wb348lZ2N4M",
+        "title": "双十一，购物享受批发价",
+        "token": "1qJt/y3PygSrDmlTBO43UfhbxcPNhJi5CFLDGkwRpVSwk7iP5qkbsEplkL6s1Evbr2Kbe+RzhnaorSSiMKmQXARM83hc7cySrq00mIuhMWXRfm2KMWtCS1HiMYX+oqNWTktX3KrGuQytBGJzjMzufVOCZe8Mm84MgTxzo1yUISE=",
+        "web_socket_url": "wss://live-ws-group8.kuaishou.com/websocket"
+      },
       "service": {
           "api_base_url": "https://aigc-video-dev.softsugar.com/aigc/live/live-api-dev",
           "project_id": "1351",

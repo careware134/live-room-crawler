@@ -52,6 +52,27 @@ const (
 	KUAISHOU Platform = "kuaishou" // ping响应
 )
 
+type PlayMode string
+
+const (
+	HOST_MODE   PlayMode = "HOST_MODE"
+	ASSIST_MODE PlayMode = "ASSIST_MODE"
+)
+
+var playModeMap = map[int]PlayMode{
+	1: HOST_MODE,
+	2: ASSIST_MODE,
+}
+
+func GetPlayModeByCode(index int) PlayMode {
+	playMode, ok := playModeMap[index]
+	if ok {
+		return playMode
+	}
+
+	return HOST_MODE
+}
+
 // CommandRequest 请求体
 type CommandRequest struct {
 	CommandType CommandType   `json:"type"`
@@ -86,6 +107,7 @@ type CommandResponse struct {
 
 type PlayContent struct {
 	DrivenType DrivenType `json:"driven_type,omitempty"`
+	PlayMode   PlayMode   `json:"play_mode,omitempty"`
 	Text       string     `json:"text,omitempty"`
 	Audio      string     `json:"audio,omitempty"`
 }

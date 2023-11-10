@@ -30,8 +30,8 @@ type Meta struct {
 	NoSpeech       bool    `json:"no_speech"`
 	NoText         bool    `json:"no_text"`
 	TriggeredQuery string  `json:"triggered_query"`
-	TaskQA         TaskQA  `json:"taskqa"`
-	Skill          Skill   `json:"skill"`
+	TaskQA         *TaskQA `json:"taskqa"`
+	Skill          *Skill  `json:"skill"`
 }
 
 type QueryResponse struct {
@@ -51,6 +51,19 @@ func (queryResponse *QueryResponse) ToPlayMessage() *CommandResponse {
 	if !queryResponse.Meta.NoText {
 		drivenType = TEXT
 	}
+
+	// judge play mode from label list
+	playMode := HOST_MODE
+	if queryResponse.Meta.TaskQA != nil && queryResponse.Meta.TaskQA.Label != nil {
+		labelList := queryResponse.Meta.TaskQA.Label
+		for _, label := range labelList {
+			if label == string(ASSIST_MODE) {
+				playMode = ASSIST_MODE
+				break
+			}
+		}
+	}
+
 	response := &CommandResponse{
 		CommandType: PLAY,
 		TraceId:     queryResponse.Trace,
@@ -58,6 +71,7 @@ func (queryResponse *QueryResponse) ToPlayMessage() *CommandResponse {
 			DrivenType: drivenType,
 			Text:       queryResponse.Text,
 			Audio:      queryResponse.Answer,
+			PlayMode:   playMode,
 		},
 		RuleMeta: RuleMeta{
 			Name:     queryResponse.Meta.TriggeredQuery,

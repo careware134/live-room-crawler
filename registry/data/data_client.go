@@ -61,6 +61,7 @@ func (item *RegistryItem) CompareRule(counterType domain.CounterType, counter *d
 			answer := rule.AnswerList[randomIndex]
 			content := domain.PlayContent{
 				DrivenType: domain.GetDrivenTypeByCode(rule.DriverType),
+				PlayMode:   domain.GetPlayModeByCode(rule.PlayMode),
 				Audio:      answer.AudioUrl,
 				Text:       answer.Text,
 			}
