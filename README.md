@@ -42,22 +42,48 @@
 接口协议：
 https://odd-card-01e.notion.site/web-socket-86f57165e3cd4ca09aaf056ec54ea414
 5. start指令
+   - 快手-target
    ```json
    {
       "type": "start",
       "trace_id": "xx",
       "target": {
          "live_url" : "https://live.kuaishou.com/u/Lxx2002128",
-         "platform": "kuaishou"
+         "platform": "kuaishou",
+         "cookie": "clientid=3; did=web_ed6647fa5146f926c3f4f03a741b92a4; client_key=65890b29; kpn=GAME_ZONE; kuaishou.live.bfb1s=ac5f27b3b62895859c4c1622f49856a4; kuaishou.live.web_st=ChRrdWFpc2hvdS5saXZlLndlYi5zdBKgAVdJDtZp9r-HkLmVyICRFF_NCHxzQWMbOftyXKP8e7knzpV9i6nsMd-Qg-vwssqFZTwjMuAfmV0n9eIf8f3yB_dcs_0pPnI_X1pEr8hlyTi1CUZQlLUG-0j870wPseXOCKIWS3exaAKGfW5BsG2JowCnnzlR-b0lRMuYhizOykPJOR6LsaGxuyBsOdAGpLVUBYV_vJW5gojhpu9WOi3MjpkaEhqtgBlt9k0TlHg5Y4Goo9D9kyIg3iZ3LDFP164oyJ8y99uao9vDTqY3QM_50m_0QoeyInUoBTAB; kuaishou.live.web_ph=4120de6421ef1cce0a807332487b6a1e8109; userId=3720421602;"
       },
       "service": {
           "api_base_url": "https://aigc-video-dev.softsugar.com/aigc/live/live-api-dev",
           "project_id": "1351",
           "tenant_id": "10643218595",
-          "authorization": "eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiI5NTU0YTYzOC1lY2UwLTQxYTMtOTFkNy0xMWNiM2UxYWY2ZGIiLCJPcmlnaW5hbFNvdXJjZSI6IlBDX0xJVkUiLCJzdWIiOiI2NDMyMTg1OTUiLCJleHAiOjE2OTc3MTUyNDV9.61cwTFkvevmSUFHXmCxzl7MYw4CTlU8k3ggvUdNd_mDMMrJpKS232YNKlUpJYvMcmwHIfEFlpWnBjUwG453Wew"
+          "authorization": "eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiIxYTEyNWQyYy03ZWUyLTRjYmItOGEwZS04NGE2NjhjYTI5OGIiLCJPcmlnaW5hbFNvdXJjZSI6IlBDX0xJVkUiLCJzdWIiOiI2NDMyMTg1OTUiLCJleHAiOjE3MDIxMjI2MTF9.yz89NpRmmirWyO4_OPzeAoj8yDAb_ji65jrL2WnE-uP92KIDs3UOiOeeejVVI666_nqav_rGfVYEOVZvipYcCQ"
       }
    }
    ```
+   - 快手-roomInfo
+   ```json
+    {
+      "type": "start",
+      "trace_id": "xx",
+      "target": {
+         "live_url" : "https://live.kuaishou.com/u/Lxx2002128",
+         "platform": "kuaishou"
+      },
+      "room":{
+           "room_id": "85wRR05h8L4",
+           "title": "和尚在线一打多",
+           "token": "1qJt/y3PygSrDmlTBO43UfhbxcPNhJi5CFLDGkwRpVSwk7iP5qkbsEplkL6s1Evbr2Kbe+RzhnaorSSiMKmQXARM83hc7cySrq00mIuhMWUliSobezWrlh8Uc1tDk4eH84EE+exvWZwCUu61/oUFuvjslXK/2ku+XESHLBDQ+4Y=",
+           "web_socket_url": "wss://live-ws-group6.kuaishou.com/websocket"
+       },
+      "service": {
+          "api_base_url": "https://aigc-video-dev.softsugar.com/aigc/live/live-api-dev",
+          "project_id": "1351",
+          "tenant_id": "10643218595",
+          "authorization": "eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiIxYTEyNWQyYy03ZWUyLTRjYmItOGEwZS04NGE2NjhjYTI5OGIiLCJPcmlnaW5hbFNvdXJjZSI6IlBDX0xJVkUiLCJzdWIiOiI2NDMyMTg1OTUiLCJleHAiOjE3MDIxMjI2MTF9.yz89NpRmmirWyO4_OPzeAoj8yDAb_ji65jrL2WnE-uP92KIDs3UOiOeeejVVI666_nqav_rGfVYEOVZvipYcCQ"
+      }
+   }
+   ```
+   - 抖音-target
    ```json
    {
       "type": "start",
@@ -70,27 +96,33 @@ https://odd-card-01e.notion.site/web-socket-86f57165e3cd4ca09aaf056ec54ea414
           "api_base_url": "https://aigc-video-dev.softsugar.com/aigc/live/live-api-dev",
           "project_id": "1351",
           "tenant_id": "10643218595",
-          "authorization": "eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiIxOWRmMTgwZi0yNWVmLTRjNWYtOGVlYy0yMDdlZGZiNzQ2ZTUiLCJPcmlnaW5hbFNvdXJjZSI6IlBDX0xJVkUiLCJzdWIiOiI2NDMyMTg1OTUiLCJleHAiOjE2OTU1Mzg2NTV9.luk1MalRiopIVtCNgLRFQ1tl4m5mRW66eZibScAm6LJ3EDpPB2Nd0Vu0HDotK0X1sCSoF5lAMiy_9-UwUg5iGA"
+          "authorization": "eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiIxYTEyNWQyYy03ZWUyLTRjYmItOGEwZS04NGE2NjhjYTI5OGIiLCJPcmlnaW5hbFNvdXJjZSI6IlBDX0xJVkUiLCJzdWIiOiI2NDMyMTg1OTUiLCJleHAiOjE3MDIxMjI2MTF9.yz89NpRmmirWyO4_OPzeAoj8yDAb_ji65jrL2WnE-uP92KIDs3UOiOeeejVVI666_nqav_rGfVYEOVZvipYcCQ"
       }
    }
    ```
-
-```json
+   - 抖音-roomInfo
+   ```json
    {
       "type": "start",
       "trace_id": "xx",
       "target": {
-         "live_url" : "https://live.douyin.com/108335413560",
+         "live_url" : "https://live.douyin.com/403184799752",
          "platform": "douyin"
       },
+      "room": {
+        "room_id": "7299213520808184586",
+        "title": "清扬双11破价！清扬官方旗舰店直播洗发水排行第一名直播间#补水滋养控油",
+        "token": "1%7Cjcb-IghCVVAkST4Eo8bTqvMrwQ2Fq_Ox0vymsYpsngY%7C1699529278%7C7b46e0753186e7757657eba0223c5bf1d9a13fd4587ae0477fa4a4e3fec4a832",
+        "web_socket_url": "wss://webcast3-ws-web-lq.douyin.com/webcast/im/push/v2/?app_name=douyin_web&version_code=180800&webcast_sdk_version=1.3.0&update_version_code=1.3.0&compress=gzip&internal_ext=internal_src:dim|wss_push_room_id:'+liveRoomId+'|wss_push_did:7188358506633528844|dim_log_id:20230521093022204E5B327EF20D5CDFC6|fetch_time:1684632622323|seq:1|wss_info:0-1684632622323-0-0|wrds_kvs:WebcastRoomRankMessage-1684632106402346965_WebcastRoomStatsMessage-1684632616357153318&cursor=t-1684632622323_r-1_d-1_u-1_h-1&host=https://live.douyin.com&aid=6383&live_id=1&did_rule=3&debug=false&maxCacheMessageNumber=20&endpoint=live_pc&support_wrds=1&im_path=/webcast/im/fetch/&user_unique_id=7188358506633528844&device_platform=web&cookie_enabled=true&screen_width=1440&screen_height=900&browser_language=zh&browser_platform=MacIntel&browser_name=Mozilla&browser_version=5.0%20(Macintosh;%20Intel%20Mac%20OS%20X%2010_15_7)%20AppleWebKit/537.36%20(KHTML,%20like%20Gecko)%20Chrome/113.0.0.0%20Safari/537.36&browser_online=true&tz_name=Asia/Shanghai&identity=audience&room_id=7299213520808184586&heartbeatDuration=0&signature=00000000"
+      },
       "service": {
-          "api_base_url": "https://aigc-video-dev.softsugar.com/aigc/live/live-api",
-          "project_id": "1317",
-          "tenant_id": "1673151231108915200",
-          "authorization": "eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiI5NTU0YTYzOC1lY2UwLTQxYTMtOTFkNy0xMWNiM2UxYWY2ZGIiLCJPcmlnaW5hbFNvdXJjZSI6IlBDX0xJVkUiLCJzdWIiOiI2NDMyMTg1OTUiLCJleHAiOjE2OTc3MTUyNDV9.61cwTFkvevmSUFHXmCxzl7MYw4CTlU8k3ggvUdNd_mDMMrJpKS232YNKlUpJYvMcmwHIfEFlpWnBjUwG453Wew"
+          "api_base_url": "https://aigc-video-dev.softsugar.com/aigc/live/live-api-dev",
+          "project_id": "1351",
+          "tenant_id": "10643218595",
+          "authorization": "eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiIxYTEyNWQyYy03ZWUyLTRjYmItOGEwZS04NGE2NjhjYTI5OGIiLCJPcmlnaW5hbFNvdXJjZSI6IlBDX0xJVkUiLCJzdWIiOiI2NDMyMTg1OTUiLCJleHAiOjE3MDIxMjI2MTF9.yz89NpRmmirWyO4_OPzeAoj8yDAb_ji65jrL2WnE-uP92KIDs3UOiOeeejVVI666_nqav_rGfVYEOVZvipYcCQ"
       }
    }
-   ```
+      ```
 
 ```json
    {

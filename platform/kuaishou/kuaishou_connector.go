@@ -27,28 +27,6 @@ type ConnectorStrategy struct {
 	ExtensionInfo ExtensionInfo
 }
 
-func (c *ConnectorStrategy) SetRoomInfo(info domain.RoomInfo) {
-	marshal, _ := json.Marshal(info)
-	util.Logger().Infof("🎦[kuaishou.ConnectorStrategy] SetRoomInfo with value:%s", marshal)
-}
-
-func (c *ConnectorStrategy) VerifyTarget() *domain.CommandResponse {
-	info := c.GetRoomInfo()
-	_, err := c.GetWebSocketInfo(info.RoomId)
-	responseStatus := constant.SUCCESS
-	if info == nil {
-		responseStatus = constant.CONNECTION_FAIL
-	}
-	if err != nil {
-		responseStatus = constant.FAIL_GETTING_SOCKET_INFO
-	}
-
-	return &domain.CommandResponse{
-		Room:           *info,
-		ResponseStatus: responseStatus,
-	}
-}
-
 type ExtensionInfo struct {
 	liveUrl string
 	//token        string
@@ -68,6 +46,33 @@ func NewInstance(Target domain.TargetStruct, stopChan chan struct{}, localConn *
 		Target:    Target,
 		localConn: localConn,
 		stopChan:  stopChan,
+	}
+}
+
+func (c *ConnectorStrategy) SetRoomInfo(info domain.RoomInfo) {
+	marshal, _ := json.Marshal(info)
+	c.RoomInfo = &info
+	util.Logger().Infof("🎦[kuaishou.ConnectorStrategy] SetRoomInfo with value:%s", marshal)
+}
+
+func (c *ConnectorStrategy) VerifyTarget() *domain.CommandResponse {
+	info := c.GetRoomInfo()
+	responseStatus := constant.SUCCESS
+	if info == nil {
+		responseStatus = constant.FAIL_GETTING_ROOM_INFO
+		return &domain.CommandResponse{
+			ResponseStatus: responseStatus,
+		}
+	}
+
+	_, err := c.GetWebSocketInfo(info.RoomId)
+	if err != nil {
+		responseStatus = constant.FAIL_GETTING_SOCKET_INFO
+	}
+
+	return &domain.CommandResponse{
+		Room:           *info,
+		ResponseStatus: responseStatus,
 	}
 }
 
@@ -129,14 +134,13 @@ func (connector *ConnectorStrategy) GetRoomInfo() *domain.RoomInfo {
 		util.Logger().Infof("🎦[kuaishou.ConnectorStrategy] fail to get kuaishou roomInfo with url: %s", connector.Target.LiveURL)
 		return nil
 	}
-	connector.GetWebSocketInfo(liveRoomId)
+
 	connector.RoomInfo = &domain.RoomInfo{
 		RoomId:    liveRoomId,
 		RoomTitle: liveRoomCaption,
 	}
 
 	util.Logger().Infof("[kuaishou.connnector][GetRoomInfo]return with roomId:%s roomTitle:%s", liveRoomId, liveRoomCaption)
-
 	_, err = connector.GetWebSocketInfo(liveRoomId)
 	if err != nil {
 		util.Logger().Infof("🎦[kuaishou.ConnectorStrategy] fail to get GetWebSocketInfo roomInfo with url: %s", connector.Target.LiveURL)

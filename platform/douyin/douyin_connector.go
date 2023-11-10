@@ -27,8 +27,18 @@ type ConnectorStrategy struct {
 	stopChan  chan struct{}
 }
 
+func NewInstance(Target domain.TargetStruct, stopChan chan struct{}, localConn *websocket.Conn) *ConnectorStrategy {
+	logger.Infof("♪ [douyin.ConnectorStrategy] NewInstance for url: %s cookie:%s", Target.LiveURL, Target.Cookie)
+	return &ConnectorStrategy{
+		Target:    Target,
+		stopChan:  stopChan,
+		localConn: localConn,
+	}
+}
+
 func (c *ConnectorStrategy) SetRoomInfo(info domain.RoomInfo) {
 	marshal, _ := json.Marshal(info)
+	c.RoomInfo = &info
 	logger.Infof("♪ [douyin.ConnectorStrategy] SetRoomInfo with value: %s", marshal)
 }
 
@@ -37,20 +47,14 @@ func (c *ConnectorStrategy) VerifyTarget() *domain.CommandResponse {
 	responseStatus := constant.SUCCESS
 	if info == nil {
 		responseStatus = constant.CONNECTION_FAIL
+		return &domain.CommandResponse{
+			ResponseStatus: responseStatus,
+		}
 	}
 
 	return &domain.CommandResponse{
 		Room:           *info,
 		ResponseStatus: responseStatus,
-	}
-}
-
-func NewInstance(Target domain.TargetStruct, stopChan chan struct{}, localConn *websocket.Conn) *ConnectorStrategy {
-	logger.Infof("♪ [douyin.ConnectorStrategy] NewInstance for url: %s cookie:%s", Target.LiveURL, Target.Cookie)
-	return &ConnectorStrategy{
-		Target:    Target,
-		stopChan:  stopChan,
-		localConn: localConn,
 	}
 }
 
@@ -110,7 +114,7 @@ func (c *ConnectorStrategy) Stop() {
 	if c.RoomInfo != nil {
 		title = c.RoomInfo.RoomTitle
 	}
-	logger.Infof("♪[kuaishou.ConnectorStrategy] Stop kuaishou for url: %s title: %s", c.Target.LiveURL, title)
+	logger.Infof("♪[douyin.ConnectorStrategy] Stop kuaishou for url: %s title: %s", c.Target.LiveURL, title)
 }
 
 func (c *ConnectorStrategy) IsAlive() bool {
@@ -119,6 +123,7 @@ func (c *ConnectorStrategy) IsAlive() bool {
 
 func (c *ConnectorStrategy) GetRoomInfo() *domain.RoomInfo {
 	if c.RoomInfo != nil {
+		logger.Infof("♪[douyin.ConnectorStrategy] GetRoomInfo return directly!")
 		return c.RoomInfo
 	}
 	return c.getRoomInfoByRequest()
