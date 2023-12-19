@@ -5,6 +5,7 @@ go 1.19
 require (
 	bitbucket.org/neiku/winornot v0.0.4
 	github.com/1set/gut v0.0.0-20201117175203-a82363231997
+	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/gin-gonic/gin v1.7.2
 	github.com/golang/protobuf v1.5.0
 	github.com/gorilla/websocket v1.4.2
@@ -19,7 +20,6 @@ require (
 )
 
 require (
-	github.com/PuerkitoBio/goquery v1.8.1 // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.13.0 // indirect

@@ -102,7 +102,7 @@ func main() {
 
 }
 
-//func main1() {
+//func main2() {
 //	var url = "https://g.meituan.com/app/business-live-broadcast/live-detail-new.html?liveid=2303472&notitlebar=1"
 //	test.TestChromeDB2(url)
 //}

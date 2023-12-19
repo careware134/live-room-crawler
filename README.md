@@ -49,6 +49,37 @@
 接口协议：
 https://odd-card-01e.notion.site/web-socket-86f57165e3cd4ca09aaf056ec54ea414
 5. start指令
+
+   - 美团-headless
+   ```json
+   {
+      "type": "start",
+      "trace_id": "xx",
+      "target": {
+         "live_url" : "https://g.meituan.com/app/business-live-broadcast/live-detail-new.html?liveid=2303472&notitlebar=1",
+         "platform": "meituan",
+         "headless": true
+      },
+      "service": {
+          "api_base_url": "https://roms-dev.shyuhuankj.com/aigc/live/live-api",
+          "project_id": "1351",
+          "tenant_id": "10643218595",
+          "authorization": "eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiIzZWViZDllNC05OGViLTRmNTAtOTdiZC1kOTdkZjdhODk4ZDQiLCJPcmlnaW5hbFNvdXJjZSI6IlBDX0xJVkUiLCJzdWIiOiI2NDMyMTg1OTUiLCJleHAiOjE3MDU1NzcwMTJ9.J0rNrFqH0KZaTAO4ztpk9dPmuOetvHEPZtA9NETVFo50j3qX7gLPEGaWwptCKMePUKcKvYcmSOU_URazutcCTg"
+      }
+   }
+   ```
+   ```json
+   {
+      "type": "event",
+      "trace_id": "xx",
+      "event": {
+         "username": "john_doe",
+         "type": "comment",
+         "content": "Great stream!",
+         "eventTime": "2023-12-19 11:00:00"
+      }
+   }
+   ```
    - 快手-target
    ```json
    {

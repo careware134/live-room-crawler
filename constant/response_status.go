@@ -26,7 +26,7 @@ var (
 
 const (
 	PlayDequeuePushInterval = 1
-	HeartbeatCheckInterval  = 150000
+	HeartbeatCheckInterval  = 150
 	LogRound                = 60
 	LoadGuideRuleURI        = "rule/guide/loadByProjectId"
 	QueryNlpURI             = "rule/chat/model/reply"

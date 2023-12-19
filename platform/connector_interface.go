@@ -6,6 +6,7 @@ import (
 	"live-room-crawler/domain"
 	"live-room-crawler/platform/douyin"
 	"live-room-crawler/platform/kuaishou"
+	"live-room-crawler/platform/wheadless"
 )
 
 type IPlatformConnectorStrategy interface {
@@ -27,7 +28,7 @@ type IPlatformConnectorStrategy interface {
 func NewConnector(targetStruct domain.TargetStruct, stopChan chan struct{}, localConn *websocket.Conn) IPlatformConnectorStrategy {
 
 	if targetStruct.Headless {
-		return douyin.NewInstance(targetStruct, stopChan, localConn)
+		return wheadless.NewInstance(targetStruct, stopChan, localConn)
 	}
 
 	if targetStruct.Platform == domain.DOUYIN {

@@ -81,7 +81,7 @@ type CommandRequest struct {
 	Target      TargetStruct    `json:"target"`
 	RoomInfo    RoomInfo        `json:"room"`
 	TraceId     string          `json:"trace_id"`
-	ActionEvent UserActionEvent `json:"action_event"`
+	ActionEvent UserActionEvent `json:"event"`
 }
 
 type ServiceStruct struct {
