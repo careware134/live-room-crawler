@@ -12,7 +12,7 @@ const (
 	// LOAD    CommandType = "load"    // 更新规则
 	REFRESH CommandType = "refresh" // 更新规则
 	STOP    CommandType = "stop"
-	ACTION  CommandType = "action" // headless模式，PC_LIVE通过headless-chrome抓取数据反推评论数据
+	EVENT   CommandType = "event" // headless模式，PC_LIVE通过headless-chrome抓取数据反推评论数据
 	PLAY    CommandType = "play"
 	PING    CommandType = "ping" // ping响应
 	PONG    CommandType = "pong" // ping响应
