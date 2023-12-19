@@ -19,12 +19,17 @@ type IPlatformConnectorStrategy interface {
 
 	Stop()
 
-	IsAlive() bool
+	IsDead() bool
 
 	VerifyTarget() *domain.CommandResponse
 }
 
 func NewConnector(targetStruct domain.TargetStruct, stopChan chan struct{}, localConn *websocket.Conn) IPlatformConnectorStrategy {
+
+	if targetStruct.Headless {
+		return douyin.NewInstance(targetStruct, stopChan, localConn)
+	}
+
 	if targetStruct.Platform == domain.DOUYIN {
 		return douyin.NewInstance(targetStruct, stopChan, localConn)
 	}

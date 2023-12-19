@@ -117,7 +117,7 @@ func (c *ConnectorStrategy) Stop() {
 	logger.Infof("♪[douyin.ConnectorStrategy] Stop kuaishou for url: %s title: %s", c.Target.LiveURL, title)
 }
 
-func (c *ConnectorStrategy) IsAlive() bool {
+func (c *ConnectorStrategy) IsDead() bool {
 	return c.IsStop
 }
 

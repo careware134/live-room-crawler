@@ -1,0 +1,65 @@
+package test
+
+import (
+	"context"
+	"fmt"
+	"github.com/chromedp/chromedp"
+)
+
+var selector = "#mlive-message-box"
+
+func handleChatContentChange1(event interface{}) {
+	fmt.Printf("event is: %s", event)
+}
+
+func handleChatContentChange(ctx context.Context) chromedp.ActionFunc {
+	return func(ctx context.Context) error {
+		// Wait for the 'm-chat' element to be visible
+		err := chromedp.WaitVisible(selector, chromedp.ByID).Do(ctx)
+		if err != nil {
+			return err
+		}
+
+		// Extract the chat content from the 'm-chat' element
+		var chatContent string
+		err = chromedp.TextContent(selector, &chatContent, chromedp.ByID).Do(ctx)
+		if err != nil {
+			return err
+		}
+
+		// Process the chat content as needed
+		fmt.Println("New chat content:", chatContent)
+
+		return nil
+	}
+}
+
+// network.EventWebSocketFrameSent
+func TestChrome(url string) {
+	// Create a new Chrome instance
+	ctx, cancel := chromedp.NewContext(context.Background())
+	defer cancel()
+
+	// Enable the DOM subtree modification event
+	//chromedp.ListenTarget(ctx, func(ev interface{}) {
+	//	switch ev := ev.(type) {
+	//	case *target.EventReceivedMessageFromTarget:
+	//		if ev.Message == "mlive-message-box" {
+	//			fmt.Println("DOM subtree modified on div#mlive-message-box")
+	//		}
+	//	}
+	//})
+
+	chromedp.Run(ctx,
+		chromedp.Navigate(url),
+	)
+
+	chromedp.Run(ctx,
+		chromedp.WaitVisible(selector, chromedp.ByID),
+		handleChatContentChange(ctx),
+	)
+
+	// Wait for the program to finish
+	fmt.Println("Listening for DOM subtree modifications on div#mlive-message-box...")
+	<-ctx.Done()
+}

@@ -9,6 +9,7 @@ import (
 	"live-room-crawler/domain"
 	"live-room-crawler/platform"
 	"live-room-crawler/server"
+	"live-room-crawler/test"
 	"live-room-crawler/util"
 )
 
@@ -100,4 +101,9 @@ func main() {
 		server.StartLocalServer(port)
 	}
 
+}
+
+func main1() {
+	var url = "https://g.meituan.com/app/business-live-broadcast/live-detail-new.html?liveid=2303472&notitlebar=1"
+	test.TestChromeDB2(url)
 }

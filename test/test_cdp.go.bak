@@ -1,0 +1,91 @@
+package test
+
+import (
+	"context"
+	"fmt"
+	"github.com/chromedp/chromedp"
+	"log"
+)
+
+var selector2 = "#mlive-message-box .message-list"
+
+func TestChromeDB2(url string) {
+	// Create a new context
+	ctx, cancel := chromedp.NewContext(context.Background())
+	defer cancel()
+
+	// Navigate to the URL
+	if err := chromedp.Run(ctx, chromedp.Navigate(url)); err != nil {
+		log.Fatal(err)
+	}
+
+	// Wait for the target <div> element to appear
+	var result string
+	if err := chromedp.Run(ctx, chromedp.TextContent(selector2, &result)); err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Initial content:", result)
+
+	// Create a channel to receive the mutation data
+	mutationChan := make(chan string)
+
+	consoleJS := `console.log = function(message) { window.mutationData(message); }`
+	// Set up a JavaScript event listener to handle the mutation data and send it to Go
+	evalCallbackScript := `
+		(() => {
+			window.mutationData = function(message) {
+				goMutationChannel(message);
+			};
+		})();
+	`
+
+	// Execute the JavaScript code to enable the event listener
+	if err := chromedp.Run(ctx,
+		chromedp.Evaluate(consoleJS, nil),
+		chromedp.Evaluate(evalCallbackScript, nil),
+	); err != nil {
+		log.Fatal(err)
+	}
+
+	// Listen for the mutation data from JavaScript and print it
+	go func() {
+		for mutation := range mutationChan {
+			fmt.Println("Mutation data:", mutation)
+		}
+	}()
+
+	// Set up a JavaScript code snippet to listen for mutations to the target <div> element
+	evalMutationScript := fmt.Sprintf(`
+		(() => {
+			const target = document.querySelector('%s');
+			const observer = new MutationObserver((mutationsList) => {
+				for (let mutation of mutationsList) {
+					if (mutation.addedNodes){
+				  	  if (mutation.addedNodes && mutation.addedNodes.length) {
+					    if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                           console.log(JSON.stringify(mutation.addedNodes[0].innerText));
+					    }
+				      }
+					}
+				}
+			});
+			observer.observe(target, { subtree: true, childList: true, characterData: true });
+		})();
+	`, selector2)
+
+	// Execute the JavaScript code to set up the MutationObserver
+	if err := chromedp.Run(ctx, chromedp.Evaluate(evalMutationScript, nil)); err != nil {
+		log.Fatal(err)
+	}
+
+	// Continuously listen for mutation data
+	for {
+		select {
+		case mutation := <-mutationChan:
+			fmt.Println("Mutation data:", mutation)
+		case <-ctx.Done():
+			return
+		}
+	}
+}

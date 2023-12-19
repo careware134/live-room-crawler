@@ -1,0 +1,33 @@
+package test
+
+import (
+	"fmt"
+	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/proto"
+)
+
+func TestROD(url string) {
+	// Create a new Rod browser instance
+	browser := rod.New().MustConnect()
+
+	// Create a new Rod page instance
+	page := browser.MustPage()
+
+	// Enable the DOM subtree modification event
+	err := page.EachEvent(func(e *proto.DOMChildNodeCountUpdated) {
+		if e.NodeID != 1 {
+			fmt.Println("DOM subtree modified on div#mlive-message-box", e)
+		}
+	})
+	if err != nil {
+		fmt.Println("Error listening for DOM subtree modifications:", err)
+		return
+	}
+
+	// Navigate to your application URL
+	page.MustNavigate(url)
+
+	// Wait for the program to finish
+	fmt.Println("Listening for DOM subtree modifications on div#mlive-message-box...")
+	page.WithCancel()
+}

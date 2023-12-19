@@ -26,20 +26,11 @@ type LiveStatisticsStruct struct {
 	Comment StatisticCounter `json:"comment,omitempty"`
 }
 
-type ActionType string
-
-const (
-	ON_COMMENT ActionType = "comment"
-	ON_ENTER   ActionType = "enter"
-	ON_GIFT    ActionType = "gift"
-	ON_FOLLOW  ActionType = "follow"
-)
-
 type UserActionEvent struct {
-	Username  string     `json:"username"`
-	Action    ActionType `json:"action"`
-	Content   string     `json:"content"`
-	EventTime time.Time  ``
+	Username  string      `json:"username"`
+	Type      CounterType `json:"type"`
+	Content   string      `json:"content"`
+	EventTime time.Time   ``
 }
 
 func (event *UserActionEvent) ToPlayMessage() *CommandResponse {

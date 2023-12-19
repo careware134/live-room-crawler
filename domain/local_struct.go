@@ -12,6 +12,7 @@ const (
 	// LOAD    CommandType = "load"    // 更新规则
 	REFRESH CommandType = "refresh" // 更新规则
 	STOP    CommandType = "stop"
+	ACTION  CommandType = "action" // headless模式，PC_LIVE通过headless-chrome抓取数据反推评论数据
 	PLAY    CommandType = "play"
 	PING    CommandType = "ping" // ping响应
 	PONG    CommandType = "pong" // ping响应
@@ -75,11 +76,12 @@ func GetPlayModeByCode(index int) PlayMode {
 
 // CommandRequest 请求体
 type CommandRequest struct {
-	CommandType CommandType   `json:"type"`
-	Service     ServiceStruct `json:"service"`
-	Target      TargetStruct  `json:"target"`
-	RoomInfo    RoomInfo      `json:"room"`
-	TraceId     string        `json:"trace_id"`
+	CommandType CommandType     `json:"type"`
+	Service     ServiceStruct   `json:"service"`
+	Target      TargetStruct    `json:"target"`
+	RoomInfo    RoomInfo        `json:"room"`
+	TraceId     string          `json:"trace_id"`
+	ActionEvent UserActionEvent `json:"action_event"`
 }
 
 type ServiceStruct struct {
@@ -93,6 +95,7 @@ type TargetStruct struct {
 	Platform Platform `json:"platform"`
 	LiveURL  string   `json:"live_url"`
 	Cookie   string   `json:"cookie"`
+	Headless bool     `json:"headless"`
 }
 
 // CommandResponse 响应体

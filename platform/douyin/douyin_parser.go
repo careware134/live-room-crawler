@@ -64,7 +64,7 @@ func (c *ConnectorStrategy) parseMessage(msg *douyin_protostub.Message, dataRegi
 	case "WebcastMemberMessage":
 		parseWebcastMemberMessage(msg.Payload)
 		//dataRegistry.EnqueueAction(localConn, domain.UserActionEvent{
-		//	Action:    domain.ON_ENTER,
+		//	Type:    domain.ON_ENTER,
 		//	Username:  memberMessage.GetUser().NickName,
 		//	Content:   memberMessage.GetUser().NickName + "加入了房间",
 		//	EventTime: time.Unix(int64(memberMessage.Common.CreateTime), 0),
@@ -77,7 +77,7 @@ func (c *ConnectorStrategy) parseMessage(msg *douyin_protostub.Message, dataRegi
 		giftMessage := parseWebcastGiftMessage(msg.Payload)
 		dataRegistry.UpdateStatistics(localConn, domain.GIFT, domain.BuildStatisticsCounter(giftMessage.ComboCount, true))
 		//dataRegistry.EnqueueAction(localConn, domain.UserActionEvent{
-		//	Action:    domain.ON_GIFT,
+		//	Type:    domain.ON_GIFT,
 		//	Username:  giftMessage.GetUser().NickName,
 		//	Content:   giftMessage.Common.Describe,
 		//	EventTime: time.Unix(int64(giftMessage.Common.CreateTime), 0),
@@ -87,7 +87,7 @@ func (c *ConnectorStrategy) parseMessage(msg *douyin_protostub.Message, dataRegi
 		chatMessage := parseWebcastChatMessage(msg.Payload)
 		dataRegistry.UpdateStatistics(localConn, domain.COMMENT, domain.BuildStatisticsCounter(1, true))
 		dataRegistry.EnqueueAction(localConn, domain.UserActionEvent{
-			Action:    domain.ON_COMMENT,
+			Type:      domain.COMMENT,
 			Username:  chatMessage.GetUser().NickName,
 			Content:   chatMessage.Content,
 			EventTime: time.Unix(int64(chatMessage.EventTime), 0),

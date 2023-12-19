@@ -117,7 +117,7 @@ func (r *ClientConnectionRegistry) evictHeartBeatLost() {
 
 func (r *ClientConnectionRegistry) evictConnectorLost() {
 	for client, localClient := range r.readyLocalClients {
-		isConnectorStopped := localClient.Connector != nil && (*localClient.Connector).IsAlive()
+		isConnectorStopped := localClient.Connector != nil && (*localClient.Connector).IsDead()
 		if localClient.Stop || isConnectorStopped {
 			logger.Infof("[ConnectionRegistry]remove connection for Connector Lost timeout[🕔⏹] address:%s isConnectorStopped: %t", client.RemoteAddr(), isConnectorStopped)
 			r.RemoveClient(client, true)

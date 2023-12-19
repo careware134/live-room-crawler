@@ -53,7 +53,7 @@ func (connector *ConnectorStrategy) OnMessage(message []byte, localConn *websock
 			registry.UpdateStatistics(localConn, domain.COMMENT, domain.BuildStatisticsCounter(uint64(len(commentFeeds)), true))
 			for _, feed := range commentFeeds {
 				registry.EnqueueAction(localConn, domain.UserActionEvent{
-					Action:    domain.ON_COMMENT,
+					Type:      domain.COMMENT,
 					Username:  feed.User.UserName,
 					Content:   feed.Content,
 					EventTime: time.Now(),

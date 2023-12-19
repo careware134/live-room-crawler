@@ -310,7 +310,7 @@ func (item *RegistryItem) StartPushPlayMessage() {
 func (item *RegistryItem) pushUserAction() {
 	for !item.PlayDeque.IsEmpty() {
 		playMessage := item.DequeueAction()
-		if playMessage.Action != domain.ON_COMMENT {
+		if playMessage.Type != domain.COMMENT {
 			continue
 		}
 		if !item.ChatAvail {

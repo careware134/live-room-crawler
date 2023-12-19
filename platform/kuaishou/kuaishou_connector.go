@@ -186,6 +186,6 @@ func (connector *ConnectorStrategy) Stop() {
 	util.Logger().Infof("🎦[kuaishou.ConnectorStrategy] Stop kuaishou for url: %s title: %s", connector.Target.LiveURL, title)
 }
 
-func (connector *ConnectorStrategy) IsAlive() bool {
+func (connector *ConnectorStrategy) IsDead() bool {
 	return connector.IsStop
 }

@@ -102,6 +102,8 @@ func (client *LocalClient) OnCommand(
 	//	response = client.onRefresh(request)
 	case domain.REFRESH:
 		response = client.onRefresh(request)
+	case domain.ACTION:
+		response = client.onAction(request)
 	case domain.STOP:
 		response = client.onStop(request)
 	case domain.PING:
@@ -283,4 +285,30 @@ func (client *LocalClient) privateTryStop(response *domain.CommandResponse) {
 		(*client.Connector).Stop()
 	}
 	logger.Infof("privateTryStop with client:%s", client.Conn.RemoteAddr())
+}
+
+// headless模式下：PC-LIVE通过headless chrome反向推直播数据给crawler
+func (client *LocalClient) onAction(request *domain.CommandRequest) *domain.CommandResponse {
+	marshal, _ := json.Marshal(request)
+	logger1.Infof("🌏onAction with request: %s", marshal)
+
+	response := &domain.CommandResponse{
+		CommandType:    domain.ACTION,
+		TraceId:        request.TraceId,
+		ResponseStatus: constant.SUCCESS,
+	}
+
+	if request == nil ||
+		request.ActionEvent == (domain.UserActionEvent{}) || request.ActionEvent.Type == "" {
+		response.ResponseStatus = constant.INVALID_ACTION_COMMAND
+		return response
+	}
+
+	data.GetDataRegistry().WriteResponse(client.Conn, response)
+	data.GetDataRegistry().UpdateStatistics(client.Conn, request.ActionEvent.Type, domain.BuildStatisticsCounter(1, true))
+	data.GetDataRegistry().EnqueueAction(client.Conn, request.ActionEvent)
+
+	marshal, _ = json.Marshal(request)
+	logger1.Infof("🌏onAction with response: %s", marshal)
+	return response
 }
