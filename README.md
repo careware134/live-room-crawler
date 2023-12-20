@@ -76,7 +76,7 @@ https://odd-card-01e.notion.site/web-socket-86f57165e3cd4ca09aaf056ec54ea414
          "username": "john_doe",
          "type": "comment",
          "content": "Great stream!",
-         "eventTime": "2023-12-19 11:00:00"
+         "event_time": "2023-12-19 11:00:00"
       }
    }
    ```

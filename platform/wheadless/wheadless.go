@@ -1,11 +1,18 @@
 package wheadless
 
 import (
+	"bytes"
+	"compress/flate"
+	"compress/gzip"
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/websocket"
+	"io"
 	"live-room-crawler/constant"
 	"live-room-crawler/domain"
 	"live-room-crawler/util"
+	"net/http"
+	"strings"
 )
 
 var (
@@ -89,67 +96,68 @@ func (c *HeadlessConnectorStrategy) IsDead() bool {
 }
 
 func (c *HeadlessConnectorStrategy) GetRoomInfo() *domain.RoomInfo {
-	c.RoomInfo = &domain.RoomInfo{
-		RoomTitle: c.Target.LiveURL,
-		RoomId:    c.Target.LiveURL,
+	platform := c.Target.Platform
+	req, err := http.NewRequest("GET", c.Target.LiveURL, nil)
+	if err != nil {
+		fmt.Println(err)
+		return nil
 	}
-	return c.RoomInfo
-	//req, err := http.NewRequest("GET", c.Target.LiveURL, nil)
-	//if err != nil {
-	//	fmt.Println(err)
-	//	return nil
-	//}
-	//
-	//// construct header to simulate connection
-	//req.Header = http.Header{
-	//	"Accept":          []string{"*/*"},
-	//	"User-Agent":      []string{"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36"},
-	//	"Accept-Encoding": []string{"gzip, deflate, br"},
-	//	"Connection":      []string{"keep-alive"},
-	//}
-	//
-	//// Create a new HTTP connection and send the request
-	//client := &http.Client{}
-	//resp, err := client.Do(req)
-	//defer resp.Body.Close()
-	//
-	//// Parse the HTML response
-	//var bodyReader *bytes.Reader
-	//switch resp.Header.Get("Content-Encoding") {
-	//case "gzip":
-	//	gzipReader, err := gzip.NewReader(resp.Body)
-	//	if err != nil {
-	//		log.Fatal(err)
-	//	}
-	//	defer gzipReader.Close()
-	//	body, err := ioutil.ReadAll(gzipReader)
-	//	if err != nil {
-	//		log.Fatal(err)
-	//	}
-	//	bodyReader = bytes.NewReader(body)
-	//
-	//case "deflate":
-	//	flateReader := flate.NewReader(resp.Body)
-	//	defer flateReader.Close()
-	//	body, err := ioutil.ReadAll(flateReader)
-	//	if err != nil {
-	//		log.Fatal(err)
-	//	}
-	//	bodyReader = bytes.NewReader(body)
-	//
-	//default:
-	//	body, err := ioutil.ReadAll(resp.Body)
-	//	if err != nil {
-	//		log.Fatal(err)
-	//	}
-	//	bodyReader = bytes.NewReader(body)
-	//}
-	//
-	//// Parse the HTML response using goquery
-	//doc, err := goquery.NewDocumentFromReader(bodyReader)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
+
+	// construct header to simulate connection
+	req.Header = http.Header{
+		"Accept":          []string{"*/*"},
+		"User-Agent":      []string{"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36"},
+		"Accept-Encoding": []string{"gzip, deflate, br"},
+		"Connection":      []string{"keep-alive"},
+	}
+
+	// Create a new HTTP connection and send the request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	// Parse the HTML response
+	var bodyReader *bytes.Reader
+	switch resp.Header.Get("Content-Encoding") {
+	case "gzip":
+		gzipReader, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			logger.Infof("👓[headless.ConnectorStrategy]GetRoomInfo gzip http response fail for platform:%s url:%s", platform, c.Target.LiveURL)
+			return nil
+		}
+		defer gzipReader.Close()
+		body, err := io.ReadAll(gzipReader)
+		if err != nil {
+			logger.Infof("👓[headless.ConnectorStrategy]GetRoomInfo read gzip body fail for platform:%s url:%s", platform, c.Target.LiveURL)
+			return nil
+		}
+		bodyReader = bytes.NewReader(body)
+
+	case "deflate":
+		flateReader := flate.NewReader(resp.Body)
+		defer flateReader.Close()
+		body, err := io.ReadAll(flateReader)
+		if err != nil {
+			logger.Infof("👓[headless.ConnectorStrategy]GetRoomInfo read deflate body fail for platform:%s url:%s", platform, c.Target.LiveURL)
+			return nil
+		}
+		bodyReader = bytes.NewReader(body)
+
+	default:
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			logger.Infof("👓[headless.ConnectorStrategy]GetRoomInfo read default body fail for platform:%s url:%s", platform, c.Target.LiveURL)
+			return nil
+		}
+		bodyReader = bytes.NewReader(body)
+	}
+
+	bodyBytes, _ := io.ReadAll(bodyReader)
+	bodyString := string(bodyBytes)
+	if !strings.Contains(bodyString, "_AWP_DEPLOY_VERSION") {
+		logger.Infof("👓[headless.ConnectorStrategy] GetRoomInfo fail for NOT containing _AWP_DEPLOY_VERSION, platform:%s url:%s body is", platform, c.Target.LiveURL, bodyString)
+		return nil
+	}
 	//
 	//// Get the innerHTML from the <title> tag
 	//title := strings.TrimSpace(doc.Text())
@@ -165,4 +173,10 @@ func (c *HeadlessConnectorStrategy) GetRoomInfo() *domain.RoomInfo {
 	//	RoomTitle: title,
 	//	RoomId:    cid,
 	//}
+
+	c.RoomInfo = &domain.RoomInfo{
+		RoomTitle: c.Target.LiveURL,
+		RoomId:    c.Target.LiveURL,
+	}
+	return c.RoomInfo
 }

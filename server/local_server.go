@@ -71,7 +71,7 @@ func verifyHandler(w gin.ResponseWriter, r *http.Request) {
 	}
 
 	var target domain.TargetStruct
-	var verifyResponse *domain.CommandResponse
+	var verifyResponse = &domain.CommandResponse{}
 	requestJson := r.Body
 	logger.Infof("verifyHandler request with: %s", requestJson)
 	err := json.NewDecoder(requestJson).Decode(&target)
