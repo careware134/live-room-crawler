@@ -86,15 +86,15 @@ https://odd-card-01e.notion.site/web-socket-86f57165e3cd4ca09aaf056ec54ea414
       "type": "start",
       "trace_id": "xx",
       "target": {
-         "live_url" : "https://live.kuaishou.com/u/Lxx2002128",
+         "live_url" : "https://live.kuaishou.com/u/WPJS88888888TZ",
          "platform": "kuaishou",
-         "cookie": "clientid=3; did=web_ed6647fa5146f926c3f4f03a741b92a4; client_key=65890b29; kpn=GAME_ZONE; kuaishou.live.bfb1s=ac5f27b3b62895859c4c1622f49856a4; kuaishou.live.web_st=ChRrdWFpc2hvdS5saXZlLndlYi5zdBKgAVdJDtZp9r-HkLmVyICRFF_NCHxzQWMbOftyXKP8e7knzpV9i6nsMd-Qg-vwssqFZTwjMuAfmV0n9eIf8f3yB_dcs_0pPnI_X1pEr8hlyTi1CUZQlLUG-0j870wPseXOCKIWS3exaAKGfW5BsG2JowCnnzlR-b0lRMuYhizOykPJOR6LsaGxuyBsOdAGpLVUBYV_vJW5gojhpu9WOi3MjpkaEhqtgBlt9k0TlHg5Y4Goo9D9kyIg3iZ3LDFP164oyJ8y99uao9vDTqY3QM_50m_0QoeyInUoBTAB; kuaishou.live.web_ph=4120de6421ef1cce0a807332487b6a1e8109; userId=3720421602;"
+         "cookie": "clientid=3; did=web_d18003f098669fb4f60e640b668dddfa; client_key=65890b29; kpn=GAME_ZONE; kuaishou.live.bfb1s=3e261140b0cf7444a0ba411c6f227d88; kuaishou.live.web_st=ChRrdWFpc2hvdS5saXZlLndlYi5zdBKgAdf6l8P_CWYIwGEC170J84TUzQvuV8K19cJWV56dQFUW3tWjubteVMvK0uHkWEHoq1g89P9XaJhenRecWvXC2VBAJ8y-dGMz9PBKVLYKdP4j_nDOv3yqDDQTjAKXSSStJ7W8iSpmK3mxpnNXIeErDbWVzWneGn9Q5XD2mjsNb8-mgDs4R6yvgLKTy2qqnrYbPqX3giwSAneqr27XRmjo02saEsvpGUru20c-iIt7T0W8MQrXwiIgGVmLEgmuD1-XIbQxcgs61QjFey4MMRHmCjIRn5NrC4IoBTAB; kuaishou.live.web_ph=89ad0dca3a7d9214fbc1b5a2b76e6a822d12; userId=3720421602;"
       },
       "service": {
-          "api_base_url": "https://aigc-video-dev.softsugar.com/aigc/live/live-api-dev",
+          "api_base_url": "https://roms-dev.shyuhuankj.com/aigc/live/live-api",
           "project_id": "1351",
           "tenant_id": "10643218595",
-          "authorization": "eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiIxYTEyNWQyYy03ZWUyLTRjYmItOGEwZS04NGE2NjhjYTI5OGIiLCJPcmlnaW5hbFNvdXJjZSI6IlBDX0xJVkUiLCJzdWIiOiI2NDMyMTg1OTUiLCJleHAiOjE3MDIxMjI2MTF9.yz89NpRmmirWyO4_OPzeAoj8yDAb_ji65jrL2WnE-uP92KIDs3UOiOeeejVVI666_nqav_rGfVYEOVZvipYcCQ"
+          "authorization": "eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiIzZWViZDllNC05OGViLTRmNTAtOTdiZC1kOTdkZjdhODk4ZDQiLCJPcmlnaW5hbFNvdXJjZSI6IlBDX0xJVkUiLCJzdWIiOiI2NDMyMTg1OTUiLCJleHAiOjE3MDU1NzcwMTJ9.J0rNrFqH0KZaTAO4ztpk9dPmuOetvHEPZtA9NETVFo50j3qX7gLPEGaWwptCKMePUKcKvYcmSOU_URazutcCTg"
       }
    }
    ```

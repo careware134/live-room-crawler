@@ -70,8 +70,8 @@ func (item *RegistryItem) CompareRule(counterType domain.CounterType, counter *d
 				CommandType:    domain.PLAY,
 				TraceId:        uuid.NewString(),
 				ResponseStatus: constant.SUCCESS,
-				Content:        content,
-				RuleMeta: domain.RuleMeta{
+				Content:        &content,
+				RuleMeta: &domain.RuleMeta{
 					Id:        int64(idInt),
 					Name:      rule.Name,
 					Threshold: rule.Threshold,
@@ -93,7 +93,7 @@ func (item *RegistryItem) LoadRule(traceId string) constant.ResponseStatus {
 	defer item.countLock.Unlock()
 
 	servicePart := item.StartRequest.Service
-	responseStatus, ruleResponse := requestGetRule(traceId, servicePart)
+	responseStatus, ruleResponse := requestGetRule(traceId, *servicePart)
 	if !responseStatus.Success {
 		return responseStatus
 	}
@@ -136,7 +136,6 @@ func (item *RegistryItem) UpdateStatistics(
 	counter *domain.StatisticCounter) {
 	item.countLock.Lock()
 	defer item.countLock.Unlock()
-	marshal, _ := json.Marshal(counter)
 
 	if item != nil {
 		playResponse := item.CompareRule(counterType, counter)
@@ -144,7 +143,10 @@ func (item *RegistryItem) UpdateStatistics(
 			item.WriteResponse(playResponse)
 		}
 
-		logger.Infof("UpdateStatistics for connection addr:%s type:%s counter:%s ", item.conn.RemoteAddr(), counterType, marshal)
+		value, _ := item.Statistics[counterType]
+		marshal, _ := json.Marshal(value)
+
+		logger.Infof("✏️UpdateStatistics done for item connection addr:%s type:%s counter:%s ", item.conn.RemoteAddr(), counterType, marshal)
 
 	} else {
 		logger.Warnf("UpdateStatistics FAIL for connection addr:%s", item.conn.RemoteAddr())

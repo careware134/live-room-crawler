@@ -112,9 +112,9 @@ func (r *EventDataRegistry) WriteResponse(client *websocket.Conn, commandRespons
 func (r *EventDataRegistry) UpdateStatistics(conn *websocket.Conn, counterType domain.CounterType, counter *domain.StatisticCounter) error {
 	addr := ""
 	if conn != nil {
-		addr = conn.LocalAddr().String()
+		addr = conn.RemoteAddr().String()
 	}
-	logger.Infof("UpdateStatistics LocalAddr:%s CounterType:%s counter:%s", addr, counterType, counter)
+	logger.Infof("EventDataRegistry#UpdateStatistics request for LocalAddr:%s CounterType:%s counter:%s", addr, counterType, counter)
 	item := r.registryItems[conn]
 	if item == nil {
 		return errors.New(constant.CLIENT_NOT_READY.Message)

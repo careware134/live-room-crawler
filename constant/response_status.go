@@ -9,7 +9,7 @@ type ResponseStatus struct {
 var (
 	SUCCESS                  = ResponseStatus{Success: true, Code: "SUCCESS", Message: "成功"}
 	UNKNOWN_COMMAND          = ResponseStatus{Success: false, Code: "UNKNOWN_COMMAND", Message: "未知指令！"}
-	INVALID_ACTION_COMMAND   = ResponseStatus{Success: false, Code: "INVALID_ACTION_COMMAND", Message: "无效的Action指令！"}
+	INVALID_EVENT_COMMAND    = ResponseStatus{Success: false, Code: "INVALID_EVENT_COMMAND", Message: "无效的事件指令！"}
 	SUCCESS_ALREADY          = ResponseStatus{Success: true, Code: "SUCCESS_ALREADY", Message: "成功，请勿重复start！"}
 	LOAD_RULE_FAIL           = ResponseStatus{Success: false, Code: "LOAD_RULE_FAIL", Message: "加载规则失败！"}
 	REQUEST_SERVER_FAILED    = ResponseStatus{Success: false, Code: "REQUEST_SERVER_FAILED", Message: "网络请求失败！"}

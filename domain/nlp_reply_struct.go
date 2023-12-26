@@ -67,13 +67,13 @@ func (queryResponse *QueryResponse) ToPlayMessage() *CommandResponse {
 	response := &CommandResponse{
 		CommandType: PLAY,
 		TraceId:     queryResponse.Trace,
-		Content: PlayContent{
+		Content: &PlayContent{
 			DrivenType: drivenType,
 			Text:       queryResponse.Text,
 			Audio:      queryResponse.Answer,
 			PlayMode:   playMode,
 		},
-		RuleMeta: RuleMeta{
+		RuleMeta: &RuleMeta{
 			Name:     queryResponse.Meta.TriggeredQuery,
 			Query:    queryResponse.Query,
 			UserName: queryResponse.Meta.UserName,

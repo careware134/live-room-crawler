@@ -52,14 +52,14 @@ func (c *HeadlessConnectorStrategy) VerifyTarget() *domain.CommandResponse {
 	info := c.GetRoomInfo()
 	responseStatus := constant.SUCCESS
 	if info == nil {
-		responseStatus = constant.CONNECTION_FAIL
+		responseStatus = constant.INVALID_LIVE_URL
 		return &domain.CommandResponse{
 			ResponseStatus: responseStatus,
 		}
 	}
 
 	return &domain.CommandResponse{
-		Room:           *info,
+		Room:           info,
 		ResponseStatus: responseStatus,
 	}
 }

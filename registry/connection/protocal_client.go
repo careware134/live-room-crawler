@@ -154,7 +154,7 @@ func (client *LocalClient) onStart(request *domain.CommandRequest) *domain.Comma
 	}
 
 	// create connector by start request
-	connector := platform.NewConnector(request.Target, client.stopChan, client.Conn)
+	connector := platform.NewConnector(*request.Target, client.stopChan, client.Conn)
 	if connector == nil {
 		response.ResponseStatus = constant.UNKNOWN_PLATFORM
 		logger.Errorf("onStart fail with UNKNOWN_PLATFORM")
@@ -180,8 +180,8 @@ func (client *LocalClient) onStart(request *domain.CommandRequest) *domain.Comma
 	}
 
 	// .2.2 connect to live stream platform
-	if request.RoomInfo.WebSocketUrl != "" {
-		connector.SetRoomInfo(request.RoomInfo)
+	if request.RoomInfo != nil && request.RoomInfo.WebSocketUrl != "" {
+		connector.SetRoomInfo(*request.RoomInfo)
 	}
 	responseStatus = connector.Connect()
 	if !responseStatus.Success {
@@ -189,10 +189,10 @@ func (client *LocalClient) onStart(request *domain.CommandRequest) *domain.Comma
 		GetClientRegistry().RemoveClient(client.Conn, false)
 		return response
 	}
-	response.Room = *connector.GetRoomInfo()
+	response.Room = connector.GetRoomInfo()
 	dataClient := data.GetDataRegistry().GetClient(client.Conn)
 	if dataClient != nil {
-		dataClient.RoomInfo = response.Room
+		dataClient.RoomInfo = *response.Room
 		marshal, _ := json.Marshal(response.Room)
 		logger.Infof("🚘[DataClient]relate room with data client addr:%s room:%s", client.Conn.LocalAddr(), marshal)
 	}
@@ -299,14 +299,14 @@ func (client *LocalClient) onEvent(request *domain.CommandRequest) *domain.Comma
 	}
 
 	if request == nil ||
-		request.ActionEvent == (domain.UserActionEvent{}) || request.ActionEvent.Type == "" {
-		response.ResponseStatus = constant.INVALID_ACTION_COMMAND
+		request.ActionEvent == nil || request.ActionEvent.Type == "" {
+		response.ResponseStatus = constant.INVALID_EVENT_COMMAND
 		return response
 	}
 
 	data.GetDataRegistry().WriteResponse(client.Conn, response)
 	data.GetDataRegistry().UpdateStatistics(client.Conn, request.ActionEvent.Type, domain.BuildStatisticsCounter(1, true))
-	data.GetDataRegistry().EnqueueAction(client.Conn, request.ActionEvent)
+	data.GetDataRegistry().EnqueueAction(client.Conn, *request.ActionEvent)
 
 	marshal, _ = json.Marshal(request)
 	logger1.Infof("🌏onEvent with response: %s", marshal)

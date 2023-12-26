@@ -71,7 +71,7 @@ func (c *ConnectorStrategy) VerifyTarget() *domain.CommandResponse {
 	}
 
 	return &domain.CommandResponse{
-		Room:           *info,
+		Room:           info,
 		ResponseStatus: responseStatus,
 	}
 }

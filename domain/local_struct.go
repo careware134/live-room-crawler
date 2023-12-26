@@ -76,12 +76,12 @@ func GetPlayModeByCode(index int) PlayMode {
 
 // CommandRequest 请求体
 type CommandRequest struct {
-	CommandType CommandType     `json:"type"`
-	Service     ServiceStruct   `json:"service"`
-	Target      TargetStruct    `json:"target"`
-	RoomInfo    RoomInfo        `json:"room"`
-	TraceId     string          `json:"trace_id"`
-	ActionEvent UserActionEvent `json:"event"`
+	CommandType CommandType      `json:"type"`
+	Service     *ServiceStruct   `json:"service,omitempty"`
+	Target      *TargetStruct    `json:"target,omitempty"`
+	RoomInfo    *RoomInfo        `json:"room,omitempty"`
+	TraceId     string           `json:"trace_id"`
+	ActionEvent *UserActionEvent `json:"event,omitempty"`
 }
 
 type ServiceStruct struct {
@@ -102,9 +102,9 @@ type TargetStruct struct {
 type CommandResponse struct {
 	CommandType    CommandType             `json:"type,omitempty"`
 	TraceId        string                  `json:"trace_id,omitempty"`
-	Content        PlayContent             `json:"content,omitempty"`
-	RuleMeta       RuleMeta                `json:"rule_meta,omitempty"`
-	Room           RoomInfo                `json:"room,omitempty"`
+	Content        *PlayContent            `json:"content,omitempty"`
+	RuleMeta       *RuleMeta               `json:"rule_meta,omitempty"`
+	Room           *RoomInfo               `json:"room,omitempty"`
 	ResponseStatus constant.ResponseStatus `json:"status,omitempty"`
 }
 

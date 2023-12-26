@@ -37,7 +37,7 @@ func (event *UserActionEvent) ToPlayMessage() *CommandResponse {
 	response := &CommandResponse{
 		CommandType: PLAY,
 		TraceId:     "play-" + uuid.NewString(),
-		Content: PlayContent{
+		Content: &PlayContent{
 			DrivenType: TEXT,
 			Text:       event.Content,
 		},
@@ -73,7 +73,6 @@ func (c *StatisticCounter) Add(other *StatisticCounter) {
 	} else {
 		c.Count = other.Count
 	}
-
 }
 
 func InitStatisticStruct() map[CounterType]*StatisticCounter {
