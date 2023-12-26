@@ -27,10 +27,11 @@ type LiveStatisticsStruct struct {
 }
 
 type UserActionEvent struct {
-	Username  string      `json:"username"`
-	Type      CounterType `json:"type"`
-	Content   string      `json:"content"`
-	EventTime time.Time   ``
+	Username  string            `json:"username"`
+	Type      CounterType       `json:"type"`
+	Content   string            `json:"content"`
+	EventTime time.Time         `json:"event_time,omitempty"`
+	Counter   *StatisticCounter `json:"counter,omitempty"`
 }
 
 func (event *UserActionEvent) ToPlayMessage() *CommandResponse {

@@ -303,9 +303,12 @@ func (client *LocalClient) onEvent(request *domain.CommandRequest) *domain.Comma
 		response.ResponseStatus = constant.INVALID_EVENT_COMMAND
 		return response
 	}
-
+	counter := domain.BuildStatisticsCounter(1, true)
+	if request.ActionEvent.Counter != nil {
+		counter = request.ActionEvent.Counter
+	}
 	data.GetDataRegistry().WriteResponse(client.Conn, response)
-	data.GetDataRegistry().UpdateStatistics(client.Conn, request.ActionEvent.Type, domain.BuildStatisticsCounter(1, true))
+	data.GetDataRegistry().UpdateStatistics(client.Conn, request.ActionEvent.Type, counter)
 	data.GetDataRegistry().EnqueueAction(client.Conn, *request.ActionEvent)
 
 	marshal, _ = json.Marshal(request)

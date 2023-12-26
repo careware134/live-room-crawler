@@ -146,7 +146,7 @@ func (item *RegistryItem) UpdateStatistics(
 		value, _ := item.Statistics[counterType]
 		marshal, _ := json.Marshal(value)
 
-		logger.Infof("✏️UpdateStatistics done for item connection addr:%s type:%s counter:%s ", item.conn.RemoteAddr(), counterType, marshal)
+		logger.Infof("✏️📊UpdateStatistics done for item connection addr:%s type:%s counter:%s ", item.conn.RemoteAddr(), counterType, marshal)
 
 	} else {
 		logger.Warnf("UpdateStatistics FAIL for connection addr:%s", item.conn.RemoteAddr())

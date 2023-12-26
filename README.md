@@ -80,6 +80,22 @@ https://odd-card-01e.notion.site/web-socket-86f57165e3cd4ca09aaf056ec54ea414
       }
    }
    ```
+   ```json
+   {
+      "type": "event",
+      "trace_id": "xx",
+      "event": {
+         "username": "",
+         "type": "view",
+         "content": "11",
+         "counter": {
+           "count": 1000, 
+           "incr": false
+         },
+         "event_time": "2023-12-19 11:00:00"
+      }
+   }
+   ```
    - 快手-target
    ```json
    {
