@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/flate"
 	"compress/gzip"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
@@ -112,8 +113,23 @@ func (c *HeadlessConnectorStrategy) GetRoomInfo() *domain.RoomInfo {
 	}
 
 	// Create a new HTTP connection and send the request
-	client := &http.Client{}
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			CipherSuites: []uint16{
+				tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+			},
+			InsecureSkipVerify: true,
+			MinVersion:         tls.VersionTLS11,
+			MaxVersion:         tls.VersionTLS11,
+		},
+	}
+	client := &http.Client{Transport: tr}
 	resp, err := client.Do(req)
+	if err != nil {
+		logger.Errorf("👓[headless.ConnectorStrategy] fail to request url:%s error:%s", c.Target.LiveURL, err.Error())
+		return nil
+	}
 	defer resp.Body.Close()
 
 	// Parse the HTML response
@@ -154,10 +170,27 @@ func (c *HeadlessConnectorStrategy) GetRoomInfo() *domain.RoomInfo {
 
 	bodyBytes, _ := io.ReadAll(bodyReader)
 	bodyString := string(bodyBytes)
-	if !strings.Contains(bodyString, "_AWP_DEPLOY_VERSION") {
-		logger.Infof("👓[headless.ConnectorStrategy] GetRoomInfo fail for NOT containing _AWP_DEPLOY_VERSION, platform:%s url:%s body is", platform, c.Target.LiveURL, bodyString)
-		return nil
+	if c.Target.Platform == domain.MEITUAN {
+		if !strings.Contains(bodyString, "_AWP_DEPLOY_VERSION") {
+			logger.Infof("👓[headless.ConnectorStrategy] GetRoomInfo fail for NOT containing _AWP_DEPLOY_VERSION, platform:%s url:%s body is", platform, c.Target.LiveURL, bodyString)
+			return nil
+		}
+		c.RoomInfo = &domain.RoomInfo{
+			RoomTitle: c.Target.LiveURL,
+			RoomId:    c.Target.LiveURL,
+		}
 	}
+	if c.Target.Platform == domain.PINDUODUO {
+		if !strings.Contains(bodyString, "window.__SPEPKEY__") {
+			logger.Infof("👓[headless.ConnectorStrategy] GetRoomInfo fail for NOT containing _AWP_DEPLOY_VERSION, platform:%s url:%s body is", platform, c.Target.LiveURL, bodyString)
+			return nil
+		}
+		c.RoomInfo = &domain.RoomInfo{
+			RoomTitle: c.Target.LiveURL,
+			RoomId:    c.Target.LiveURL,
+		}
+	}
+
 	//
 	//// Get the innerHTML from the <title> tag
 	//title := strings.TrimSpace(doc.Text())
@@ -174,9 +207,5 @@ func (c *HeadlessConnectorStrategy) GetRoomInfo() *domain.RoomInfo {
 	//	RoomId:    cid,
 	//}
 
-	c.RoomInfo = &domain.RoomInfo{
-		RoomTitle: c.Target.LiveURL,
-		RoomId:    c.Target.LiveURL,
-	}
 	return c.RoomInfo
 }

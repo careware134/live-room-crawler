@@ -49,8 +49,10 @@ func GetDrivenTypeByCode(index int) DrivenType {
 type Platform string
 
 const (
-	DOUYIN   Platform = "douyin"   // 开始直播；开始直播信号
-	KUAISHOU Platform = "kuaishou" // ping响应
+	DOUYIN    Platform = "douyin"
+	KUAISHOU  Platform = "kuaishou"
+	MEITUAN   Platform = "meituan"   // 开始直播；开始直播信号
+	PINDUODUO Platform = "pinduoduo" // 开始直播；开始直播信号
 )
 
 type PlayMode string
