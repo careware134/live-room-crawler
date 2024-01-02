@@ -7,6 +7,8 @@ import (
 	"gopkg.in/robfig/cron.v2"
 	"io"
 	"os"
+	"os/user"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -15,8 +17,14 @@ import (
 
 func InitLog() {
 	// Create a lumberjack logger that writes to a file
+	logPath := "./log/app.log"
+	home, _ := user.Current()
+	if home != nil {
+		logPath = filepath.Join(home.HomeDir, "Documents", "STDH2D", "crawler", "app.log")
+	}
+
 	logger := &lumberjack.Logger{
-		Filename:   "./log/app.log.1",
+		Filename:   logPath,
 		MaxSize:    10, // Max size in MB before rolling over
 		MaxBackups: 5,  // Max number of old log files to keep
 		MaxAge:     30, // Max number of days to keep old log files
