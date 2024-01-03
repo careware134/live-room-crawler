@@ -14,6 +14,7 @@ import (
 	"math/rand"
 	"net/http"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -55,6 +56,9 @@ func (connector *ConnectorStrategy) GetLiveRoomId() (string, string, error) {
 		return "", "", fmt.Errorf(constant.INVALID_LIVE_URL.Code)
 	}
 	jsonData := jsonMatches[1]
+	if strings.Contains(jsonData, "\"authToken\":undefined,") {
+		jsonData = strings.Replace(jsonData, "\"authToken\":undefined,", "", -1)
+	}
 	util.Logger().Infof("[kuaishou.connector]roomData: %s", jsonData)
 
 	root, err := ajson.Unmarshal([]byte(jsonData))
