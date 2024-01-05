@@ -11,6 +11,7 @@ import (
 	"io"
 	"live-room-crawler/constant"
 	"live-room-crawler/domain"
+	"live-room-crawler/platform/douyin"
 	"live-room-crawler/util"
 	"net/http"
 	"strings"
@@ -189,6 +190,11 @@ func (c *HeadlessConnectorStrategy) GetRoomInfo() *domain.RoomInfo {
 			RoomTitle: c.Target.LiveURL,
 			RoomId:    c.Target.LiveURL,
 		}
+	}
+
+	if c.Target.Platform == domain.DOUYIN {
+		instance := douyin.NewInstance(c.Target, c.stopChan, c.localConn)
+		c.RoomInfo = instance.GetRoomInfo()
 	}
 
 	//

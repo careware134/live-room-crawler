@@ -160,7 +160,7 @@ https://odd-card-01e.notion.site/web-socket-86f57165e3cd4ca09aaf056ec54ea414
          "type": "start",
          "trace_id": "xx",
          "target": {
-            "live_url" : "https://live.douyin.com/554433484141",
+            "live_url" : "https://live.douyin.com/945843973757",
             "platform": "douyin"
          },
          "service": {

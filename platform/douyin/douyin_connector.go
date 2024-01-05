@@ -67,7 +67,7 @@ func (c *ConnectorStrategy) Connect() constant.ResponseStatus {
 
 	websocketUrl := strings.ReplaceAll(WebSocketTemplateURL, RoomIdPlaceHolder, roomInfo.RoomId)
 	header := http.Header{
-		"cookie":     []string{"ttwid=" + roomInfo.Token},
+		"cookie":     []string{DouyinCookie},
 		"User-Agent": []string{SimulateUserAgent},
 	}
 
@@ -140,8 +140,8 @@ func (c *ConnectorStrategy) getRoomInfoByRequest() *domain.RoomInfo {
 	// construct header to simulate connection
 	req.Header = http.Header{
 		"Accept":     []string{"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"},
-		"User-Agent": []string{"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36"},
-		"Cookie":     []string{"ttwid=1%7CcMckL3_tA47rt11Ektt038lvR_qO4_w9TPINxgIVWBQ%7C1704274070%7Cdceb110148d3e384753ac64e55ea92efa1389600ecb71c010aba193ed82dfb19; has_avx2=null; device_web_cpu_core=12; device_web_memory_size=8; live_use_vvc=%22false%22; xgplayer_user_id=136259113385; csrf_session_id=90bccab7b3988b8c03b8e775b678414b; ttcid=4cfd498bef754336baea64cd3476676831; FORCE_LOGIN=%7B%22videoConsumedRemainSeconds%22%3A180%7D; __ac_nonce=065952d1b001f10f86f0b; __ac_signature=_02B4Z6wo00f014jIhpAAAIDCBclR1OcXzYuI6IIAAIevjD9PRMafTVjOd0.JDui.ndFCusoT6dMpOIzZIGi0vgkWzP0CSXfH0nkKdBTmyuR-GMgDaQQN8xkan8qdNwkV9f21uhxOFK07u63r41; webcast_local_quality=sd; webcast_leading_last_show_time=1704276190454; webcast_leading_total_show_times=2; pwa2=%220%7C0%7C3%7C0%22; download_guide=%223%2F20240103%2F0%22; xg_device_score=7.802204888412783; msToken=8VpuTPur6-0ShNqAnvMsPVT6NsiuzNgjKTKrYHbBKMQVsT0Sp5WZtC6-fQDUxSDlpuRiBzj7UUSJPc6p3Wq4Or3UqdKKkJEHIVErONlhZKmyuL4vWaTKaPWF4NeM; tt_scid=Sy4boUfYrwdXqtJ917AF57iKJhzV1yQS-5KNpTlP6irjDGwMkVGIy8bcEcRE33Qx32ff; __live_version__=%221.1.1.6845%22; live_can_add_dy_2_desktop=%221%22; msToken=fHCLfxKr4SqfHl8kSyR4jew35LV-niUiTNJqmZUDkdu74ZGueJ0a6b6opVP8Rhjkl0XEziqAnTgFBOKJ4fKJ67sFSPRf1-r0VA6kC3ty-v35WYKP-gqnNNvfe8LL; IsDouyinActive=false"},
+		"User-Agent": []string{SimulateUserAgent},
+		"Cookie":     []string{DouyinCookie},
 	}
 
 	// Create a new HTTP connection and send the request
